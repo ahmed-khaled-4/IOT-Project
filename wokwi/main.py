@@ -20,8 +20,8 @@ except ImportError:
     dht = None
 
 
-# ---------------- Configuration (edit to match your local MQTT setup) ----------------
-MQTT_HOST = "10.0.0.2"
+# ---------------- Configuration ----------------
+MQTT_HOST = "broker.hivemq.com"
 MQTT_PORT = 1883
 
 TOPIC_TELEMETRY = b"campus/bldg_01/floor_01/room_101/telemetry"
@@ -29,13 +29,10 @@ TOPIC_HEARTBEAT = b"campus/bldg_01/floor_01/room_101/heartbeat"
 TOPIC_COMMAND = b"campus/bldg_01/floor_01/room_101/command"
 ROOM_SENSOR_ID = "b01-f01-r101"
 
-# Virtual epoch base (since MicroPython in Wokwi doesn't do NTP by default).
 EPOCH_BASE = 1700000000  # fixed start; acts like "fake NTP"
 
-# Publish cadence
 TELEMETRY_INTERVAL_SEC = 5
 HEARTBEAT_INTERVAL_SEC = 15
-
 
 # Actuator defaults
 HVAC_MODE = "ECO"  # ON / OFF / ECO
@@ -57,27 +54,29 @@ else:
     dht_sensor = None
 
 
-# ---------------- WiFi (Wokwi network) ----------------
-ssid = "wokwi"
+# ---------------- WiFi (Wokwi virtual network) ----------------
+ssid = "Wokwi-GUEST"
 password = ""
 
 
 def connect_wifi():
-    # Wokwi provides a "virtual" WiFi; this call keeps structure similar to real ESP32 code.
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
     if not wlan.isconnected():
+        print("WiFi: connecting to", ssid)
         wlan.connect(ssid, password)
-        # Wait briefly.
         for _ in range(50):
             if wlan.isconnected():
                 break
             time.sleep_ms(100)
+    if wlan.isconnected():
+        print("WiFi: connected, IP =", wlan.ifconfig()[0])
+    else:
+        print("WiFi: connection failed")
     return wlan
 
 
 def _now_epoch_sec():
-    # uptime_ms/1000 approximates simulated time.
     return EPOCH_BASE + int(time.ticks_ms() / 1000)
 
 
@@ -93,9 +92,7 @@ def read_occupancy():
 
 
 def read_light_level_lux():
-    # Convert ADC reading to a lux-like range 0..1000 deterministically.
     raw = ldr_adc.read()  # 0..4095
-    # Assume inverse-ish relationship; scale to 0..1000 for the engine.
     lux = int((raw / 4095) * 1000)
     if lux < 0:
         lux = 0
@@ -105,7 +102,6 @@ def read_light_level_lux():
 
 
 def validate_command_payload(obj):
-    # Minimal schema enforcement (MicroPython friendly).
     if not isinstance(obj, dict):
         return False
     allowed = {"hvac_mode", "target_temp", "lighting_dimmer"}
@@ -134,17 +130,19 @@ def apply_command(obj):
     global HVAC_MODE, TARGET_TEMP, LIGHTING_DIMMER
     if "hvac_mode" in obj:
         HVAC_MODE = obj["hvac_mode"]
+        print("CMD: hvac_mode ->", HVAC_MODE)
     if "target_temp" in obj:
         TARGET_TEMP = float(obj["target_temp"])
+        print("CMD: target_temp ->", TARGET_TEMP)
     if "lighting_dimmer" in obj:
         LIGHTING_DIMMER = int(obj["lighting_dimmer"])
+        print("CMD: lighting_dimmer ->", LIGHTING_DIMMER)
 
 
 def mqtt_callback(topic, msg):
     try:
         if topic != TOPIC_COMMAND:
             return
-        # msg is bytes
         s = msg.decode("utf-8")
         obj = json.loads(s)
     except:
@@ -161,20 +159,27 @@ def mqtt_callback(topic, msg):
 def main():
     connect_wifi()
 
-    client = MQTTClient("wokwi-room-101", MQTT_HOST, MQTT_PORT)
-    client.set_callback(mqtt_callback)
-    client.connect()
-    client.subscribe(TOPIC_COMMAND)
+    client = None
+    try:
+        client = MQTTClient("wokwi-room-101", MQTT_HOST, MQTT_PORT)
+        client.set_callback(mqtt_callback)
+        client.connect()
+        client.subscribe(TOPIC_COMMAND)
+        print("MQTT: connected to", MQTT_HOST)
+    except Exception as e:
+        print("MQTT: connection failed:", e)
+        print("Running in offline mode (serial output only)")
+        client = None
 
     last_telemetry = time.ticks_ms()
     last_heartbeat = time.ticks_ms()
 
     while True:
-        # Handle incoming commands without blocking long.
-        try:
-            client.check_msg()
-        except:
-            pass
+        if client:
+            try:
+                client.check_msg()
+            except:
+                pass
 
         now_ms = time.ticks_ms()
         if (now_ms - last_telemetry) >= TELEMETRY_INTERVAL_SEC * 1000:
@@ -184,7 +189,6 @@ def main():
             occupancy = read_occupancy()
             light_level = read_light_level_lux()
 
-            # Lighting correlation: if occupied, keep light above a threshold.
             if occupancy and light_level < 300:
                 light_level = 300
                 LIGHTING_DIMMER = 80
@@ -201,8 +205,12 @@ def main():
                 "hvac_mode": str(HVAC_MODE),
                 "lighting_dimmer": int(LIGHTING_DIMMER),
             }
-
-            client.publish(TOPIC_TELEMETRY, json.dumps(payload))
+            print("TX:", json.dumps(payload))
+            if client:
+                try:
+                    client.publish(TOPIC_TELEMETRY, json.dumps(payload))
+                except:
+                    pass
 
         if (now_ms - last_heartbeat) >= HEARTBEAT_INTERVAL_SEC * 1000:
             last_heartbeat = now_ms
@@ -211,10 +219,14 @@ def main():
                 "timestamp": _now_epoch_sec(),
                 "status": "Healthy",
             }
-            client.publish(TOPIC_HEARTBEAT, json.dumps(hb))
+            print("HB:", json.dumps(hb))
+            if client:
+                try:
+                    client.publish(TOPIC_HEARTBEAT, json.dumps(hb))
+                except:
+                    pass
 
         time.sleep_ms(100)
 
 
 main()
-
