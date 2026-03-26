@@ -18,25 +18,22 @@ def now_unix_sec() -> int:
 
 @dataclass
 class Room:
-    # Identity
     building_id: int
     floor_id: int
-    room_code: int  # e.g. 502 for floor 5, room 02
-    room_id: str  # e.g. b01-f05-r502
+    room_code: int
+    room_id: str
 
-    # State
     temperature: float
     humidity: float
     occupancy: bool
-    light_level: int  # lux (0-1000)
+    light_level: int
 
-    hvac_mode: str  # ON/OFF/ECO
+    hvac_mode: str
     target_temp: float
-    lighting_dimmer: int  # 0-100 (%)
+    lighting_dimmer: int
 
-    last_update: int  # unix seconds
+    last_update: int
 
-    # Runtime-only bookkeeping (not persisted)
     _frozen_until: Optional[int] = field(default=None, repr=False)
     _last_heartbeat_published: int = field(default=0, repr=False)
 
@@ -74,14 +71,6 @@ class Room:
         )
 
     def apply_command(self, payload: Dict[str, Any]) -> None:
-        """
-        Apply backend/dashboard command(s) to actuator targets.
-
-        Expected fields (all optional):
-        - hvac_mode: ON/OFF/ECO
-        - target_temp: float
-        - lighting_dimmer: int (0-100)
-        """
         if "hvac_mode" in payload:
             mode = str(payload["hvac_mode"]).upper()
             if mode in HVAC_MODES:
@@ -90,20 +79,15 @@ class Room:
             self.target_temp = float(payload["target_temp"])
         if "lighting_dimmer" in payload:
             self.lighting_dimmer = int(payload["lighting_dimmer"])
-
         self.last_update = now_unix_sec()
 
     def validate_and_clamp(self) -> None:
-        # Spec ranges from the course handout.
         self.temperature = clamp(self.temperature, 15.0, 50.0)
         self.humidity = clamp(self.humidity, 0.0, 100.0)
         self.light_level = int(clamp(float(self.light_level), 0.0, 1000.0))
         self.lighting_dimmer = int(clamp(float(self.lighting_dimmer), 0.0, 100.0))
-
         if self.hvac_mode not in HVAC_MODES:
-            # Fail-safe: don't crash the whole simulation if state becomes invalid.
             self.hvac_mode = "ECO"
-
         self.target_temp = clamp(self.target_temp, 15.0, 50.0)
 
     def to_telemetry_json(self, *, timestamp: int) -> Dict[str, Any]:
@@ -114,22 +98,14 @@ class Room:
             "temperature": float(self.temperature),
             "humidity": float(self.humidity),
             "occupancy": bool(self.occupancy),
-            "light_level": int(self.light_level),  # lux
+            "light_level": int(self.light_level),
             "hvac_mode": str(self.hvac_mode),
-            "lighting_dimmer": int(self.lighting_dimmer),  # 0-100%
+            "lighting_dimmer": int(self.lighting_dimmer),
         }
 
     @classmethod
     def from_db_row(cls, row: Dict[str, Any]) -> "Room":
-        """
-        Create a Room from a DB row.
-
-        Table columns are expected to match `engine/persistence.py`.
-        """
-        # room_id is already a slug like b01-f05-r502
         room_id = str(row["room_id"])
-
-        # Parse identity from slug: bXX-fYY-rZZZ
         try:
             building_part, floor_part, room_part = room_id.split("-")
             building_id = int(building_part.replace("b", ""))
@@ -154,9 +130,6 @@ class Room:
         )
 
     def db_tuple(self) -> Tuple[Any, ...]:
-        """
-        Tuple in the same order as the INSERT/UPDATE statement in persistence.
-        """
         return (
             self.room_id,
             float(self.temperature),
@@ -168,4 +141,3 @@ class Room:
             int(self.light_level),
             int(self.last_update),
         )
-

@@ -1,26 +1,28 @@
-# MicroPython firmware for Wokwi reference room.
-#
-# This is a "single room" POC that:
-# - reads temperature/humidity (DHT22)
-# - reads occupancy (PIR motion sensor)
-# - reads ambient light (photoresistor / LDR)
-# - publishes telemetry to MQTT as JSON
-# - listens for actuator commands and validates incoming payloads
+# Wokwi ESP32 MicroPython firmware — single reference room POC.
+# Reads DHT22, PIR, LDR sensors and outputs telemetry as JSON.
 
 import machine
 import time
 import json
 
-from umqtt.simple import MQTTClient
+print("== SWAPD453 Wokwi Reference Room ==")
+print("Booting...")
+
 import network
+
+try:
+    from umqtt.simple import MQTTClient
+    MQTT_AVAILABLE = True
+except ImportError:
+    MQTT_AVAILABLE = False
 
 try:
     import dht
 except ImportError:
     dht = None
 
-
-# ---------------- Configuration ----------------
+# ---- Config ----
+ENABLE_MQTT = True
 MQTT_HOST = "broker.hivemq.com"
 MQTT_PORT = 1883
 
@@ -29,21 +31,18 @@ TOPIC_HEARTBEAT = b"campus/bldg_01/floor_01/room_101/heartbeat"
 TOPIC_COMMAND = b"campus/bldg_01/floor_01/room_101/command"
 ROOM_SENSOR_ID = "b01-f01-r101"
 
-EPOCH_BASE = 1700000000  # fixed start; acts like "fake NTP"
-
+EPOCH_BASE = 1700000000
 TELEMETRY_INTERVAL_SEC = 5
 HEARTBEAT_INTERVAL_SEC = 15
 
-# Actuator defaults
-HVAC_MODE = "ECO"  # ON / OFF / ECO
+HVAC_MODE = "ECO"
 TARGET_TEMP = 24.0
 LIGHTING_DIMMER = 60
 
-
-# ---------------- Sensor setup ----------------
+# ---- Sensors ----
 DHT_PIN = 15
 PIR_PIN = 14
-LDR_ADC_PIN = 34  # ADC1 input
+LDR_ADC_PIN = 34
 
 pir = machine.Pin(PIR_PIN, machine.Pin.IN)
 ldr_adc = machine.ADC(machine.Pin(LDR_ADC_PIN))
@@ -53,8 +52,9 @@ if dht is not None:
 else:
     dht_sensor = None
 
+print("Sensors initialized: DHT22, PIR, LDR")
 
-# ---------------- WiFi (Wokwi virtual network) ----------------
+# ---- WiFi ----
 ssid = "Wokwi-GUEST"
 password = ""
 
@@ -92,7 +92,7 @@ def read_occupancy():
 
 
 def read_light_level_lux():
-    raw = ldr_adc.read()  # 0..4095
+    raw = ldr_adc.read()
     lux = int((raw / 4095) * 1000)
     if lux < 0:
         lux = 0
@@ -148,11 +148,9 @@ def mqtt_callback(topic, msg):
     except:
         print("Command invalid JSON")
         return
-
     if not validate_command_payload(obj):
         print("Command rejected by schema")
         return
-
     apply_command(obj)
 
 
@@ -160,16 +158,20 @@ def main():
     connect_wifi()
 
     client = None
-    try:
-        client = MQTTClient("wokwi-room-101", MQTT_HOST, MQTT_PORT)
-        client.set_callback(mqtt_callback)
-        client.connect()
-        client.subscribe(TOPIC_COMMAND)
-        print("MQTT: connected to", MQTT_HOST)
-    except Exception as e:
-        print("MQTT: connection failed:", e)
-        print("Running in offline mode (serial output only)")
-        client = None
+    if ENABLE_MQTT and MQTT_AVAILABLE:
+        try:
+            client = MQTTClient("wokwi-room-101", MQTT_HOST, MQTT_PORT)
+            client.set_callback(mqtt_callback)
+            client.connect()
+            client.subscribe(TOPIC_COMMAND)
+            print("MQTT: connected to", MQTT_HOST)
+        except Exception as e:
+            print("MQTT: connection failed:", e)
+            client = None
+
+    if client is None:
+        print("Mode: Serial output only")
+    print("--- Telemetry stream started ---")
 
     last_telemetry = time.ticks_ms()
     last_heartbeat = time.ticks_ms()

@@ -48,10 +48,6 @@ def _deep_get(d: dict, path: str, default=None):
 
 
 def _apply_env_overrides(cfg: dict) -> dict:
-    """
-    Phase 1 overrides: support a small set of commonly used env vars.
-    """
-    # Simulation
     if "SIM_TICK_INTERVAL" in os.environ:
         cfg["simulation"]["tick_interval_sec"] = float(os.environ["SIM_TICK_INTERVAL"])
     if "SIM_TIME_ACCELERATION" in os.environ:
@@ -63,25 +59,21 @@ def _apply_env_overrides(cfg: dict) -> dict:
             os.environ["SIM_PERSISTENCE_SYNC_INTERVAL"]
         )
 
-    # MQTT
     if "MQTT_HOST" in os.environ:
         cfg["mqtt"]["broker_host"] = os.environ["MQTT_HOST"]
     if "MQTT_PORT" in os.environ:
         cfg["mqtt"]["broker_port"] = int(os.environ["MQTT_PORT"])
     if "MQTT_TOPIC_PREFIX" in os.environ:
         prefix = os.environ["MQTT_TOPIC_PREFIX"].strip().rstrip("/")
-        # Update fleet topics as well.
         cfg["fleet"]["health_topic"] = f"{prefix}/fleet/health"
         cfg["fleet"]["fleet_command_topic"] = f"{prefix}/fleet/command"
         cfg["topics"]["room_telemetry_template"] = f"{prefix}/floor_{{floor}}/room_{{roomCode}}/telemetry"
         cfg["topics"]["room_heartbeat_template"] = f"{prefix}/floor_{{floor}}/room_{{roomCode}}/heartbeat"
         cfg["topics"]["room_command_template"] = f"{prefix}/floor_{{floor}}/room_{{roomCode}}/command"
 
-    # Persistence
     if "SQLITE_PATH" in os.environ:
         cfg["database"]["sqlite_path"] = os.environ["SQLITE_PATH"]
 
-    # Faults
     if "FAULTS_ENABLED" in os.environ:
         cfg["faults"]["enabled"] = os.environ["FAULTS_ENABLED"].lower() in ("1", "true", "yes", "y")
     if "FAULTS_PROBABILITY" in os.environ:
@@ -91,18 +83,13 @@ def _apply_env_overrides(cfg: dict) -> dict:
 
 
 def _log_factory(level: str) -> Callable[[str], None]:
-    # Phase 1: keep it lightweight; log_fn expects a string (often already JSON).
     def log_fn(message: str) -> None:
-        # Include monotonic time for debugging latency without wall-clock changes.
         print(json.dumps({"ts_unix": int(time.time()), "ts_monotonic": time.monotonic(), "level": level, "msg": message}))
-
     return log_fn
 
 
 def _stable_seed(room_id: str) -> int:
-    # Deterministic seed across processes/runs: use Python's built-in hash is NOT stable.
     import hashlib
-
     d = hashlib.sha1(room_id.encode("utf-8")).digest()
     return int.from_bytes(d[:4], byteorder="big", signed=False)
 
@@ -131,6 +118,7 @@ async def room_task(
     persistence: Persistence,
     stop_event: asyncio.Event,
 ) -> None:
+    # Spread startup across the tick window to avoid thundering herd
     rng = random.Random(fault_seed ^ 0xA5A5A5A5)
     jitter = rng.uniform(0.0, max_jitter_sec) if max_jitter_sec > 0 else 0.0
     if jitter > 0:
@@ -140,14 +128,13 @@ async def room_task(
 
     tick_index = 0
     next_heartbeat_virtual = env.virtual_epoch_now_sec() + float(heartbeat_interval_sec_sim)
-    # If telemetry is delayed, we use snapshots.
 
     loop = asyncio.get_running_loop()
     while not stop_event.is_set():
         start = loop.time()
         processing = 0.0
         try:
-            # Apply incoming commands at tick start (non-blocking).
+            # Drain pending commands
             applied_any_command = False
             while True:
                 try:
@@ -157,26 +144,21 @@ async def room_task(
                 room.apply_command(payload)
                 applied_any_command = True
 
-            # Update the simulated timestamp for telemetry/heartbeat.
             timestamp = env.virtual_epoch_now_sec()
             room.last_update = int(timestamp)
 
-            # --- Deterministic physics update ---
             physics.update_room(room, tick_dt_sim_sec=tick_dt_sim_sec)
 
-            # --- Fault injection (affects sensor readings, dropout/telemetry delay) ---
             fault_result = injector.tick(
                 room=room, tick_index=tick_index, tick_dt_sim_sec=tick_dt_sim_sec
             )
 
-            # Validate/clamp before publishing.
             room.validate_and_clamp()
 
-            # Save point after actuator commands are applied.
             if applied_any_command:
                 persistence.request_sync()
 
-            # --- Telemetry publish ---
+            # Publish telemetry
             publish_telemetry = (telemetry_interval_ticks <= 1) or (tick_index % telemetry_interval_ticks == 0)
             if publish_telemetry and not fault_result.dropout_active:
                 payload = room.to_telemetry_json(timestamp=int(timestamp))
@@ -193,12 +175,11 @@ async def room_task(
                 else:
                     mqtt.publish_telemetry(room, payload)
 
-            # --- Heartbeat publish ---
+            # Publish heartbeat at fixed simulated intervals
             if not fault_result.dropout_active and timestamp >= next_heartbeat_virtual:
                 mqtt.publish_heartbeat(room)
                 fleet.update_heartbeat(room_id)
 
-                # Advance next heartbeat in fixed simulated intervals.
                 while timestamp >= next_heartbeat_virtual:
                     next_heartbeat_virtual += float(heartbeat_interval_sec_sim)
 
@@ -209,12 +190,11 @@ async def room_task(
 
         processing = loop.time() - start
         metrics.record_tick_processing(processing * 1000.0)
-        # Precision drift compensation.
+        # Drift compensation: subtract processing time from sleep
         await asyncio.sleep(max(0.0, tick_interval_real_sec - processing))
 
 
 async def run_engine(args: argparse.Namespace) -> None:
-    # Resolve paths.
     root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
     config_path = os.path.join(root_dir, "config", "config.yaml")
     dotenv_path = os.path.join(root_dir, ".env")
@@ -234,7 +214,6 @@ async def run_engine(args: argparse.Namespace) -> None:
     rooms_per_floor = int(cfg["campus"]["rooms_per_floor"])
     rooms_total = buildings * floors_per_building * rooms_per_floor
 
-    # Apply CLI rooms override using FleetManager rooms_limit.
     rooms_limit = args.rooms if args.rooms is not None else None
     rooms_total_expected = int(rooms_limit) if rooms_limit is not None else rooms_total
 
@@ -242,7 +221,6 @@ async def run_engine(args: argparse.Namespace) -> None:
     time_acc = float(cfg["simulation"]["time_acceleration"])
     tick_dt_sim_sec = tick_interval_real_sec * time_acc
 
-    # Virtual clock
     clock = VirtualClock(
         start_real_epoch_sec=time.time(),
         start_monotonic=time.monotonic(),
@@ -269,14 +247,12 @@ async def run_engine(args: argparse.Namespace) -> None:
         light_occupied_max=int(cfg["occupancy_correlation"]["light_occupied_max"]),
     )
 
-    # Metrics
     metrics = MetricsCollector(
         latency_threshold_ms=float(cfg["performance"]["latency_threshold_ms"]),
         summary_interval_sec=60.0,
         log_fn=log_fn,
     )
 
-    # Persistence — ensure directory exists (needed for local runs on Windows).
     db_path = str(cfg["database"]["sqlite_path"])
     os.makedirs(os.path.dirname(os.path.abspath(db_path)), exist_ok=True)
     persistence = Persistence(
@@ -288,10 +264,9 @@ async def run_engine(args: argparse.Namespace) -> None:
     db_states = await persistence.load_room_states()
     log_fn(f"persistence.loaded_rooms={len(db_states)}")
 
-    # MQTT topic builders.
     fleet_command_topic = str(cfg["fleet"]["fleet_command_topic"])
     health_topic = str(cfg["fleet"]["health_topic"])
-    topic_prefix = "/".join(fleet_command_topic.split("/")[:2])  # campus/bldg_01
+    topic_prefix = "/".join(fleet_command_topic.split("/")[:2])
 
     def telemetry_topic(room: Room) -> str:
         return f"{topic_prefix}/floor_{room.floor_id:02d}/room_{room.room_code}/telemetry"
@@ -299,10 +274,8 @@ async def run_engine(args: argparse.Namespace) -> None:
     def heartbeat_topic(room: Room) -> str:
         return f"{topic_prefix}/floor_{room.floor_id:02d}/room_{room.room_code}/heartbeat"
 
-    # For subscription: campus/bldg_01/+/+/command
     room_command_subscription = f"{topic_prefix}/+/+/command"
 
-    # Fleet manager with command queues + heartbeat health.
     defaults = {
         "default_temp": float(cfg["thermal"]["default_temp"]),
         "default_humidity": float(cfg["thermal"]["default_humidity"]),
@@ -327,14 +300,13 @@ async def run_engine(args: argparse.Namespace) -> None:
         rooms_limit=rooms_limit,
     )
 
-    # Restore from DB (if available).
+    # Restore persisted state from SQLite
     for room_id, room in list(fleet.rooms_by_id.items()):
         row = db_states.get(room_id)
         if not row:
             continue
         fleet.rooms_by_id[room_id] = Room.from_db_row(row)
 
-    # Start MQTT.
     mqtt: Optional[MQTTClientWrapper] = None
 
     def on_room_command(room_id: str, payload: Dict[str, Any]) -> None:
@@ -359,13 +331,10 @@ async def run_engine(args: argparse.Namespace) -> None:
 
     await mqtt.connect_and_subscribe()
 
-    # Patch FleetManager health publisher now that mqtt exists.
     fleet._publish_health_fn = lambda topic, payload: mqtt.publish(topic, json.dumps(payload), qos=None)
 
-    # Stop coordination.
     stop_event = asyncio.Event()
 
-    # Metrics background tasks.
     metric_tasks = [
         asyncio.create_task(
             metrics.run_event_loop_latency_monitor(
@@ -375,10 +344,8 @@ async def run_engine(args: argparse.Namespace) -> None:
         asyncio.create_task(metrics.run_summary_task(stop_event=stop_event)),
     ]
 
-    # Fleet heartbeat monitor.
     fleet_task = asyncio.create_task(fleet.heartbeat_monitor_task(stop_event=stop_event))
 
-    # Persistence sync loop.
     persistence_task = asyncio.create_task(
         persistence.run_sync_loop(
             rooms_by_id=fleet.rooms_by_id,
@@ -387,7 +354,6 @@ async def run_engine(args: argparse.Namespace) -> None:
         )
     )
 
-    # Room tasks.
     max_jitter_sec = float(cfg["simulation"]["max_startup_jitter_sec"])
     telemetry_interval_ticks = int(cfg["simulation"]["telemetry_interval_ticks"])
     heartbeat_interval_sec_sim = float(cfg["fleet"]["heartbeat_interval_sec"])
@@ -426,13 +392,11 @@ async def run_engine(args: argparse.Namespace) -> None:
             )
         )
 
-    # Run for a limited duration if requested.
     try:
         if args.duration_sec is not None:
             await asyncio.sleep(float(args.duration_sec))
             stop_event.set()
         else:
-            # Run until Ctrl+C
             while True:
                 await asyncio.sleep(1.0)
     except KeyboardInterrupt:
@@ -447,7 +411,6 @@ async def run_engine(args: argparse.Namespace) -> None:
         fleet_task.cancel()
         persistence_task.cancel()
 
-        # Ensure MQTT disconnect.
         try:
             await mqtt.disconnect()
         except Exception:
@@ -457,9 +420,9 @@ async def run_engine(args: argparse.Namespace) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Phase 1 World Engine (async IoT campus simulation)")
-    p.add_argument("--rooms", type=int, default=None, help="Limit number of rooms for smoke tests")
-    p.add_argument("--duration-sec", type=float, default=None, help="Run duration in real seconds then exit")
+    p = argparse.ArgumentParser(description="Phase 1 World Engine")
+    p.add_argument("--rooms", type=int, default=None, help="Limit room count for testing")
+    p.add_argument("--duration-sec", type=float, default=None, help="Run duration in seconds")
     return p.parse_args()
 
 
@@ -470,4 +433,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

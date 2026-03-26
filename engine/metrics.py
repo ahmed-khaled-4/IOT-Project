@@ -29,9 +29,6 @@ class TickStats:
 
 
 class MetricsCollector:
-    """
-    Lightweight metrics collection suitable for high-concurrency asyncio workloads.
-    """
 
     def __init__(
         self,
@@ -45,26 +42,21 @@ class MetricsCollector:
         self._summary_interval_sec = float(summary_interval_sec)
         self._log = log_fn
         self._proc = process or psutil.Process(os.getpid())
-
         self._tick_stats = TickStats()
         self._loop_latency_stats = TickStats()
-
         self._stop_event: Optional[asyncio.Event] = None
 
     def record_tick_processing(self, processing_ms: float) -> None:
         self._tick_stats.record_processing(processing_ms)
 
     async def run_event_loop_latency_monitor(self, *, stop_event: asyncio.Event, sleep_sec: float = 0.2) -> None:
-        """
-        Measures "event loop latency" as the overshoot of a periodic asyncio wakeup.
-        """
+        """Measures event loop latency as overshoot of a periodic sleep."""
         loop = asyncio.get_running_loop()
         while not stop_event.is_set():
             start = loop.time()
             await asyncio.sleep(sleep_sec)
             elapsed = loop.time() - start
             overshoot = max(0.0, elapsed - sleep_sec)
-
             self._loop_latency_stats.record_processing(overshoot * 1000.0)
             if (overshoot * 1000.0) > self._latency_threshold_ms:
                 self._log(
@@ -72,18 +64,13 @@ class MetricsCollector:
                 )
 
     async def run_summary_task(self, *, stop_event: asyncio.Event) -> None:
-        """
-        Periodically prints summary metrics and resets counters.
-        """
+        """Logs periodic CPU, memory, and tick latency stats."""
         while not stop_event.is_set():
             await asyncio.sleep(self._summary_interval_sec)
 
-            # Snapshot and reset.
             tick_count = self._tick_stats.tick_count
             avg_proc = self._tick_stats.avg_processing_ms
             max_proc = self._tick_stats.max_processing_ms
-
-            loop_count = self._loop_latency_stats.tick_count
             avg_loop = self._loop_latency_stats.avg_processing_ms
             max_loop = self._loop_latency_stats.max_processing_ms
 
@@ -95,7 +82,5 @@ class MetricsCollector:
                 f"loop_avg_ms={avg_loop:.2f} loop_max_ms={max_loop:.2f} cpu_percent={cpu_percent:.1f} mem_mb={mem_mb:.1f}"
             )
 
-            # Reset by recreating objects (safe under GIL for this Phase).
             self._tick_stats = TickStats()
             self._loop_latency_stats = TickStats()
-

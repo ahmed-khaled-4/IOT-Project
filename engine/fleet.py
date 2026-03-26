@@ -25,12 +25,6 @@ class FleetCommand:
 
 
 class FleetManager:
-    """
-    Fleet orchestration:
-    - instantiates 200 rooms (building/floor/room hierarchy)
-    - routes fleet-wide & room-specific actuator commands to per-room queues
-    - monitors heartbeat and publishes fleet health
-    """
 
     def __init__(
         self,
@@ -98,11 +92,6 @@ class FleetManager:
             )
 
     def update_heartbeat(self, room_id: str) -> None:
-        """
-        Called by room tasks when they publish heartbeat.
-        Uses monotonic timestamps to avoid issues with clock jumps.
-        """
-        # Dict assignment is atomic under CPython's GIL; monitor takes a snapshot under lock.
         self._heartbeat_monotonic[room_id] = time.monotonic()
 
     def request_room_command(self, room_id: str, payload: Dict[str, Any]) -> None:
@@ -123,14 +112,9 @@ class FleetManager:
                 self._log(f"fleet.command.queue_full room_id={room_id}")
 
     async def heartbeat_monitor_task(self, stop_event: asyncio.Event) -> None:
-        """
-        Monitor heartbeat freshness and publish fleet health.
-        """
-        # Publish cadence: roughly aligned with monitor checks.
         while not stop_event.is_set():
             now = time.monotonic()
 
-            # Timeout is configured in SIMULATED seconds. Convert to real monotonic by dividing acceleration.
             sim_acc = float(getattr(self._clock, "time_acceleration", 1.0) or 1.0)
             timeout_real = self._heartbeat_timeout_sec / sim_acc
 
@@ -139,8 +123,8 @@ class FleetManager:
 
             healthy = 0
             warning = 0
-
             silent_rooms = []
+
             for room_id in self.rooms_by_id.keys():
                 last = snapshot.get(room_id)
                 if last is None or (now - last) > timeout_real:
@@ -149,7 +133,6 @@ class FleetManager:
                 else:
                     healthy += 1
 
-            # Structured log.
             if warning > 0:
                 self._log(
                     json.dumps(
@@ -176,4 +159,3 @@ class FleetManager:
                 self._log(f"fleet.health.publish_error error={type(e).__name__}:{e}")
 
             await asyncio.sleep(self._heartbeat_check_interval_sec)
-

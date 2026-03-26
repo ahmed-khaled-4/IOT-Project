@@ -24,12 +24,6 @@ def _build_validator(schema: dict) -> Draft7Validator:
 
 
 class MQTTClientWrapper:
-    """
-    gmqtt wrapper providing:
-    - telemetry + heartbeat publishing
-    - subscriptions to fleet and per-room command topics
-    - JSON validation and routing into room/fleet handlers
-    """
 
     def __init__(
         self,
@@ -49,22 +43,16 @@ class MQTTClientWrapper:
         self._broker_host = broker_host
         self._broker_port = int(broker_port)
         self._qos = int(qos)
-
         self._fleet_command_topic = fleet_command_topic
         self._room_command_subscription = room_command_subscription
-
         self._client = MQTTClient(client_id)
         self._log = log_fn
-
         self._room_telemetry_topic_builder = room_telemetry_topic_builder
         self._room_heartbeat_topic_builder = room_heartbeat_topic_builder
-
         self._on_room_command = on_room_command
         self._on_fleet_command = on_fleet_command
-
         self._validator = _build_validator(ROOM_COMMAND_SCHEMA)
 
-        # Assign callbacks.
         self._client.on_connect = self._handle_connect
         self._client.on_message = self._handle_message
 
@@ -75,7 +63,6 @@ class MQTTClientWrapper:
         await self._client.disconnect()
 
     def publish(self, topic: str, payload: str, *, qos: Optional[int] = None) -> None:
-        # gmqtt publish is fire-and-forget.
         self._client.publish(topic, payload, qos or self._qos)
 
     def publish_telemetry(self, room: Any, payload: dict) -> None:
@@ -91,13 +78,9 @@ class MQTTClientWrapper:
         }
         self.publish(topic, json.dumps(heartbeat_payload), qos=self._qos)
 
-    # --- gmqtt callbacks ---
-
     def _handle_connect(self, client, flags, rc, properties) -> None:
         self._log(f"mqtt.connected rc={rc}")
-        # Fleet-wide command.
         client.subscribe(self._fleet_command_topic, qos=self._qos)
-        # Per-room command wildcard.
         client.subscribe(self._room_command_subscription, qos=self._qos)
 
     def _handle_message(self, client, topic, payload, qos, properties) -> None:
@@ -109,7 +92,6 @@ class MQTTClientWrapper:
             self._log(f"mqtt.command.invalid_json topic={topic} error={type(e).__name__}:{e}")
             return
 
-        # Validate shape.
         errors = sorted(self._validator.iter_errors(data), key=lambda e: e.path)
         if errors:
             self._log(f"mqtt.command.invalid_schema topic={topic} errors={len(errors)}")
@@ -119,22 +101,15 @@ class MQTTClientWrapper:
             self._on_fleet_command(data)
             return
 
-        # Parse per-room command topic:
-        # campus/bldg_01/floor_05/room_502/command
+        # Parse room ID from topic: campus/bldg_01/floor_05/room_502/command
         try:
             parts = topic_str.split("/")
-            # Expect: [campus, bldg_01, floor_05, room_502, command]
-            bldg_part = parts[1]
-            floor_part = parts[2]
-            room_part = parts[3]
-
-            building_id = int(bldg_part.replace("bldg_", ""))
-            floor_id = int(floor_part.replace("floor_", ""))
-            room_code = int(room_part.replace("room_", ""))
+            building_id = int(parts[1].replace("bldg_", ""))
+            floor_id = int(parts[2].replace("floor_", ""))
+            room_code = int(parts[3].replace("room_", ""))
             room_id = f"b{building_id:02d}-f{floor_id:02d}-r{room_code}"
         except Exception:
             self._log(f"mqtt.command.unrecognized_topic topic={topic_str}")
             return
 
         self._on_room_command(room_id, data)
-

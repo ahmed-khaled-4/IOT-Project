@@ -24,13 +24,6 @@ CREATE TABLE IF NOT EXISTS room_states (
 
 
 class Persistence:
-    """
-    Persistence worker for Room state.
-
-    - Restores last known truth on startup.
-    - Periodically bulk-syncs the latest state.
-    - Can be forced to create a “save point” upon receiving actuator commands.
-    """
 
     def __init__(
         self,
@@ -42,7 +35,6 @@ class Persistence:
         self._db_path = db_path
         self._rooms_total_expected = int(rooms_total_expected)
         self._sync_interval_sec = float(sync_interval_sec)
-
         self._sync_event = asyncio.Event()
 
     def request_sync(self) -> None:
@@ -55,9 +47,6 @@ class Persistence:
             await db.commit()
 
     async def load_room_states(self) -> Dict[str, dict]:
-        """
-        Load all room states from DB.
-        """
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
             async with db.execute("SELECT * FROM room_states;") as cur:
@@ -102,24 +91,16 @@ class Persistence:
         stop_event: asyncio.Event,
         log_fn,
     ) -> None:
-        """
-        Periodically sync the full fleet snapshot.
-
-        log_fn(msg: str) is injected so we can keep this module dependency-free.
-        """
         expected = self._rooms_total_expected
         while not stop_event.is_set():
             try:
-                # Wait for either an immediate sync request or the interval timeout.
                 self._sync_event.clear()
                 try:
                     await asyncio.wait_for(self._sync_event.wait(), timeout=self._sync_interval_sec)
                     log_fn("persistence.savepoint requested")
                 except asyncio.TimeoutError:
-                    # Periodic save point.
                     pass
 
-                # Snapshot all current room objects.
                 await self.bulk_sync(list(rooms_by_id.values()))
 
                 if len(rooms_by_id) != expected:
@@ -127,9 +108,8 @@ class Persistence:
             except Exception as e:
                 log_fn(f"persistence.sync_error={type(e).__name__}:{e}")
 
-        # Final sync on shutdown.
+        # Final sync on shutdown
         try:
             await self.bulk_sync(list(rooms_by_id.values()))
         except Exception:
             pass
-

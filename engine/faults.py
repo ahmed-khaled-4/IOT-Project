@@ -14,11 +14,7 @@ class FaultTickResult:
 
 
 class FaultInjector:
-    """
-    Per-room fault injector.
-
-    Runs in the room task; therefore each instance is isolated and doesn't need locks.
-    """
+    """Per-room fault injector with isolated RNG."""
 
     def __init__(self, *, room_seed: int, config: dict, room_id: str = "", log_fn=None):
         self._rng = random.Random(room_seed)
@@ -26,12 +22,10 @@ class FaultInjector:
         self._room_id = room_id
         self._log = log_fn or (lambda msg: None)
 
-        # Sensor drift
         self._drift_bias: float = 0.0
         self._drift_active: bool = False
         self._drift_sign: float = 1.0
 
-        # Frozen sensor
         self._frozen_until_tick: Optional[int] = None
         self._frozen_value: Optional[float] = None
         self._frozen_which_sensor: str = str(
@@ -42,21 +36,17 @@ class FaultInjector:
         self._frozen_duration_ticks: int = int(frozen_cfg.get("duration_ticks", 6))
         self._frozen_sensor_which: str = str(frozen_cfg.get("which_sensor", "temperature")).lower()
 
-        # Node dropout (silence)
         self._dropout_until_tick: Optional[int] = None
 
-        # Telemetry delay range
         td_cfg = config.get("telemetry_delay", {}) or {}
         self._delay_min = float(td_cfg.get("min_delay_sec", 1.0))
         self._delay_max = float(td_cfg.get("max_delay_sec", 10.0))
 
-        # Sensor drift config
         drift_cfg = config.get("sensor_drift", {}) or {}
         self._drift_max = float(drift_cfg.get("drift_max", 2.0))
         self._drift_step = float(drift_cfg.get("drift_step", 0.01))
 
     def _pick_fault_type(self) -> str:
-        # In Phase 1 we keep equal probability across the required faults.
         options = ["sensor_drift", "frozen_sensor", "telemetry_delay", "node_dropout"]
         return options[self._rng.randrange(len(options))]
 
@@ -66,21 +56,15 @@ class FaultInjector:
         return max(1, int(duration_sec / tick_dt_sim_sec))
 
     def tick(self, *, room: Room, tick_index: int, tick_dt_sim_sec: float) -> FaultTickResult:
-        """
-        Apply sensor faults to the room state (in-place), and decide whether
-        telemetry should be delayed or the node should dropout.
-        """
-        # If faults disabled, no-op.
         if not bool(self._cfg.get("enabled", True)):
             return FaultTickResult(dropout_active=False, telemetry_delay_sec=None)
 
-        # Dropout takes precedence (silence fully during dropout window).
+        # Dropout silences the node completely
         if self._dropout_until_tick is not None:
             if tick_index < self._dropout_until_tick:
                 return FaultTickResult(dropout_active=True, telemetry_delay_sec=None)
             self._dropout_until_tick = None
 
-        # Potentially trigger a new fault at this tick.
         probability = float(self._cfg.get("probability", 0.0))
         telemetry_delay_sec: Optional[float] = None
 
@@ -113,17 +97,14 @@ class FaultInjector:
                 )
                 self._log(f"fault.triggered type=node_dropout room_id={self._room_id} tick={tick_index} until_tick={self._dropout_until_tick}")
 
-        # Apply persistent faults to the current sensor readings (in-place).
+        # Apply persistent sensor drift
         if self._drift_active:
-            # Accumulate gradual bias toward the configured max.
             if abs(self._drift_bias) < self._drift_max:
                 self._drift_bias += self._drift_sign * self._drift_step
-
-            # Apply bias to temperature reading.
             room.temperature = float(room.temperature + self._drift_bias)
 
+        # Apply frozen sensor override
         if self._frozen_until_tick is not None and tick_index < self._frozen_until_tick:
-            # Override the frozen sensor reading with the stored value.
             if self._frozen_sensor_which == "humidity":
                 if self._frozen_value is not None:
                     room.humidity = float(self._frozen_value)
@@ -131,10 +112,8 @@ class FaultInjector:
                 if self._frozen_value is not None:
                     room.temperature = float(self._frozen_value)
         else:
-            # If the freeze expired, clear it.
             if self._frozen_until_tick is not None and tick_index >= self._frozen_until_tick:
                 self._frozen_until_tick = None
                 self._frozen_value = None
 
         return FaultTickResult(dropout_active=False, telemetry_delay_sec=telemetry_delay_sec)
-
