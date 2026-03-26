@@ -1,0 +1,6 @@
+gmqtt
+pyyaml
+aiosqlite
+psutil
+jsonschema
+

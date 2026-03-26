@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "author": "SWAPD453 Team",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+
+    { "type": "wokwi-dht22", "id": "dht1", "top": 120, "left": -140, "attrs": { "temperature": "24", "humidity": "40" } },
+
+    { "type": "wokwi-pir-motion-sensor", "id": "pir1", "top": 200, "left": -140, "attrs": {} },
+
+    { "type": "wokwi-photoresistor-sensor", "id": "ldr1", "top": 280, "left": -140, "attrs": { "lux": "500" } }
+  ],
+  "connections": [
+    [ "esp:3V3", "dht1:VCC", "green", [] ],
+    [ "esp:GND.1", "dht1:GND", "black", [] ],
+    [ "esp:15", "dht1:SDA", "red", [] ],
+
+    [ "esp:3V3", "pir1:VCC", "green", [] ],
+    [ "esp:GND.1", "pir1:GND", "black", [] ],
+    [ "esp:14", "pir1:OUT", "red", [] ],
+
+    [ "esp:3V3", "ldr1:VCC", "green", [] ],
+    [ "esp:GND.1", "ldr1:GND", "black", [] ],
+    [ "esp:34", "ldr1:AO", "red", [] ]
+  ],
+  "dependencies": {}
+}
+

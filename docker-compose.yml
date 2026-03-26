@@ -1,0 +1,28 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    restart: unless-stopped
+
+  engine:
+    build: .
+    depends_on:
+      - mosquitto
+    environment:
+      - MQTT_HOST=mosquitto
+      - MQTT_PORT=1883
+      - MQTT_TOPIC_PREFIX=campus/bldg_01
+      - SQLITE_PATH=/data/world.db
+      - FAULTS_ENABLED=true
+      - FAULTS_PROBABILITY=0.005
+    volumes:
+      - engine_data:/data
+    restart: unless-stopped
+
+volumes:
+  engine_data:
+

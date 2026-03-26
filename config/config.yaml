@@ -1,0 +1,74 @@
+campus:
+  buildings: 1
+  floors_per_building: 10
+  rooms_per_floor: 20
+
+simulation:
+  tick_interval_sec: 5
+  time_acceleration: 1.0
+  max_startup_jitter_sec: 5.0
+  persistence_sync_interval_sec: 60
+  telemetry_interval_ticks: 1
+
+thermal:
+  alpha: 0.01              # insulation / leakage
+  beta: 0.2                # HVAC strength
+  occupancy_heat: 0.05     # additional warming when occupied
+  default_temp: 22.0
+  default_humidity: 45.0
+  outside_temp_base: 35.0
+  outside_temp_amplitude: 10.0
+  humidity_gain: 0.3      # how humidity correlates with temp delta
+
+occupancy_correlation:
+  light_occupied_threshold: 300   # lux
+  light_unoccupied_min: 30
+  light_unoccupied_max: 120
+  light_occupied_min: 350
+  light_occupied_max: 900
+
+hvac:
+  default_hvac_mode: ECO
+  default_target_temp: 24.0
+  lighting_dimmer_default: 60
+
+faults:
+  enabled: true
+  probability: 0.005
+  sensor_drift:
+    drift_max: 2.0            # maximum accumulated bias over time
+    drift_step: 0.01         # bias increment per tick while active
+  frozen_sensor:
+    duration_ticks: 6        # freeze for N ticks
+    which_sensor: temperature
+  telemetry_delay:
+    min_delay_sec: 1.0
+    max_delay_sec: 10.0
+  node_dropout:
+    duration_sec: 30         # silence for N simulated seconds
+
+fleet:
+  heartbeat_interval_sec: 5
+  heartbeat_timeout_sec: 60
+  health_topic: campus/bldg_01/fleet/health
+  fleet_command_topic: campus/bldg_01/fleet/command
+
+mqtt:
+  broker_host: mosquitto
+  broker_port: 1883
+  qos: 1
+
+topics:
+  room_telemetry_template: campus/bldg_{building}/floor_{floor}/room_{roomCode}/telemetry
+  room_heartbeat_template: campus/bldg_{building}/floor_{floor}/room_{roomCode}/heartbeat
+  room_command_template: campus/bldg_{building}/floor_{floor}/room_{roomCode}/command
+
+performance:
+  latency_threshold_ms: 200
+
+logging:
+  level: INFO
+
+database:
+  sqlite_path: ./data/world.db
+
