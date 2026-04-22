@@ -1,28 +1,321 @@
+
+# Phase 2 Campus Stack
+#   - HiveMQ CE: central MQTT backbone (host TCP 1885->1883; 8000 WebSocket /mqtt; no CC UI in CE)
+#   - ThingsBoard CE: on-premises cloud (UI host TB_HTTP_PORT default 9090, MQTT 1884, RPC 17070, CoAP UDP 15683)
+#   - tb-gateway: ThingsBoard IoT Gateway (subscribes HiveMQ campus topics → TB; CE has no Platform Integrations UI)
+#     Override host binds if another TB stack is up: TB_HTTP_PORT, TB_MQTT_PORT, TB_RPC_PORT, TB_COAP_UDP_PORT
+#   - 10 Node-RED floor gateways: image iot-phase2-gateway (CoAP palette baked in);
+#     UIs on host 1890-1899 (avoids HiveMQ host 1885 / TB MQTT 1884)
+#   - engine: hybrid 100 MQTT + 100 CoAP World Engine (CoAP UDP 5684-5783)
+# Bring up with:  docker compose up --build
+# All services share the `campus-net` bridge network.
+
+name: iot-phase2
+
 services:
-  mosquitto:
-    image: eclipse-mosquitto:2
+
+  hivemq:
+    image: hivemq/hivemq-ce:latest
+    container_name: hivemq
+    hostname: hivemq
     ports:
-      - "1883:1883"
-      - "9001:9001"
+      # Host 1885 avoids clashes with other stacks / Mosquitto on default 1883; in-stack clients use hivemq:1883.
+      - "1885:1883"
+      # MQTT over WebSocket for browser tools (path /mqtt). CE has no Control Center web UI.
+      - "8000:8000"
     volumes:
-      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      # hivemq-ce entrypoint does not merge conf-custom; broker uses the image default config.xml.
+      # Files here are reference ACLs / full config for Enterprise or manual installs.
+      - ./infra/hivemq/conf:/opt/hivemq/conf-custom:ro
+      - ./infra/certs:/opt/hivemq/certs:ro
+      - hivemq_data:/opt/hivemq/data
+      - hivemq_log:/opt/hivemq/log
+    environment:
+      - HIVEMQ_ALLOW_ALL_CLIENTS=true
+      - HIVEMQ_LOG_LEVEL=INFO
+    networks:
+      - campus-net
     restart: unless-stopped
 
+  thingsboard:
+    image: thingsboard/tb-postgres:3.7.0
+    container_name: thingsboard
+    hostname: thingsboard
+    ports:
+      - "${TB_HTTP_PORT:-9090}:9090"
+      - "${TB_MQTT_PORT:-1884}:1883"
+      # RPC / integrations port: high host port avoids clash with other TB stacks on 7070
+      - "${TB_RPC_PORT:-17070}:7070"
+      # TB native CoAP: high host port (5683/udp is often taken by other stacks)
+      - "${TB_COAP_UDP_PORT:-15683}:5683/udp"
+    environment:
+      - TB_QUEUE_TYPE=in-memory
+      - HTTP_BIND_PORT=9090
+      - MQTT_BIND_PORT=1883
+    volumes:
+      - tb_data:/data
+      - tb_logs:/var/log/thingsboard
+    networks:
+      - campus-net
+    restart: unless-stopped
+    # First boot is often 60–120s (embedded Postgres + Java). "unhealthy" before that is normal.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:9090/login || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
+
+  # ThingsBoard IoT Gateway: bridges HiveMQ campus MQTT into ThingsBoard CE (replaces PE-only "MQTT integration").
+  tb-gateway:
+    image: thingsboard/tb-gateway:3.7.0
+    container_name: tb-gateway
+    hostname: tb-gateway
+    depends_on:
+      thingsboard:
+        condition: service_healthy
+      hivemq:
+        condition: service_started
+    environment:
+      - TB_GW_HOST=thingsboard
+      - TB_GW_PORT=1883
+      - TB_GW_ACCESS_TOKEN=${TB_GATEWAY_ACCESS_TOKEN:-phase2-campus-tb-gateway-token-change-me}
+      - TB_GW_LOGS_PATH=/thingsboard_gateway/logs
+    volumes:
+      - ./infra/thingsboard/tb-gateway:/thingsboard_gateway/config
+      - tb_gateway_logs:/thingsboard_gateway/logs
+    networks:
+      - campus-net
+    restart: unless-stopped
+
+  # -------- 10 Node-RED Floor Gateways --------
+  # Each gateway is responsible for 10 MQTT + 10 CoAP rooms on its floor.
+  # Flows are pre-seeded from ./gateways/flows/gw_fNN.json
+  gateway-f01: &gateway-template
+    build:
+      context: ./gateways
+      dockerfile: Dockerfile
+    image: iot-phase2-gateway:3.1
+    container_name: gateway-f01
+    hostname: gateway-f01
+    environment:
+      - FLOOR_ID=01
+      - HIVEMQ_HOST=hivemq
+      - HIVEMQ_PORT=1883
+      - ENGINE_HOST=engine
+    ports:
+      - "1890:1880"
+    volumes:
+      - ./gateways/flows/gw_f01.json:/data/flows.json:ro
+      - ./gateways/settings.js:/data/settings.js:ro
+      - ./gateways/package.json:/data/package.json:ro
+      - gw_f01_data:/data/.node-red-extras
+    depends_on:
+      - hivemq
+      - engine
+    networks:
+      - campus-net
+    restart: unless-stopped
+
+  gateway-f02:
+    <<: *gateway-template
+    container_name: gateway-f02
+    hostname: gateway-f02
+    environment:
+      - FLOOR_ID=02
+      - HIVEMQ_HOST=hivemq
+      - HIVEMQ_PORT=1883
+      - ENGINE_HOST=engine
+    ports:
+      - "1891:1880"
+    volumes:
+      - ./gateways/flows/gw_f02.json:/data/flows.json:ro
+      - ./gateways/settings.js:/data/settings.js:ro
+      - ./gateways/package.json:/data/package.json:ro
+      - gw_f02_data:/data/.node-red-extras
+
+  gateway-f03:
+    <<: *gateway-template
+    container_name: gateway-f03
+    hostname: gateway-f03
+    environment:
+      - FLOOR_ID=03
+      - HIVEMQ_HOST=hivemq
+      - HIVEMQ_PORT=1883
+      - ENGINE_HOST=engine
+    ports:
+      - "1892:1880"
+    volumes:
+      - ./gateways/flows/gw_f03.json:/data/flows.json:ro
+      - ./gateways/settings.js:/data/settings.js:ro
+      - ./gateways/package.json:/data/package.json:ro
+      - gw_f03_data:/data/.node-red-extras
+
+  gateway-f04:
+    <<: *gateway-template
+    container_name: gateway-f04
+    hostname: gateway-f04
+    environment:
+      - FLOOR_ID=04
+      - HIVEMQ_HOST=hivemq
+      - HIVEMQ_PORT=1883
+      - ENGINE_HOST=engine
+    ports:
+      - "1893:1880"
+    volumes:
+      - ./gateways/flows/gw_f04.json:/data/flows.json:ro
+      - ./gateways/settings.js:/data/settings.js:ro
+      - ./gateways/package.json:/data/package.json:ro
+      - gw_f04_data:/data/.node-red-extras
+
+  gateway-f05:
+    <<: *gateway-template
+    container_name: gateway-f05
+    hostname: gateway-f05
+    environment:
+      - FLOOR_ID=05
+      - HIVEMQ_HOST=hivemq
+      - HIVEMQ_PORT=1883
+      - ENGINE_HOST=engine
+    ports:
+      - "1894:1880"
+    volumes:
+      - ./gateways/flows/gw_f05.json:/data/flows.json:ro
+      - ./gateways/settings.js:/data/settings.js:ro
+      - ./gateways/package.json:/data/package.json:ro
+      - gw_f05_data:/data/.node-red-extras
+
+  gateway-f06:
+    <<: *gateway-template
+    container_name: gateway-f06
+    hostname: gateway-f06
+    environment:
+      - FLOOR_ID=06
+      - HIVEMQ_HOST=hivemq
+      - HIVEMQ_PORT=1883
+      - ENGINE_HOST=engine
+    ports:
+      - "1895:1880"
+    volumes:
+      - ./gateways/flows/gw_f06.json:/data/flows.json:ro
+      - ./gateways/settings.js:/data/settings.js:ro
+      - ./gateways/package.json:/data/package.json:ro
+      - gw_f06_data:/data/.node-red-extras
+
+  gateway-f07:
+    <<: *gateway-template
+    container_name: gateway-f07
+    hostname: gateway-f07
+    environment:
+      - FLOOR_ID=07
+      - HIVEMQ_HOST=hivemq
+      - HIVEMQ_PORT=1883
+      - ENGINE_HOST=engine
+    ports:
+      - "1896:1880"
+    volumes:
+      - ./gateways/flows/gw_f07.json:/data/flows.json:ro
+      - ./gateways/settings.js:/data/settings.js:ro
+      - ./gateways/package.json:/data/package.json:ro
+      - gw_f07_data:/data/.node-red-extras
+
+  gateway-f08:
+    <<: *gateway-template
+    container_name: gateway-f08
+    hostname: gateway-f08
+    environment:
+      - FLOOR_ID=08
+      - HIVEMQ_HOST=hivemq
+      - HIVEMQ_PORT=1883
+      - ENGINE_HOST=engine
+    ports:
+      - "1897:1880"
+    volumes:
+      - ./gateways/flows/gw_f08.json:/data/flows.json:ro
+      - ./gateways/settings.js:/data/settings.js:ro
+      - ./gateways/package.json:/data/package.json:ro
+      - gw_f08_data:/data/.node-red-extras
+
+  gateway-f09:
+    <<: *gateway-template
+    container_name: gateway-f09
+    hostname: gateway-f09
+    environment:
+      - FLOOR_ID=09
+      - HIVEMQ_HOST=hivemq
+      - HIVEMQ_PORT=1883
+      - ENGINE_HOST=engine
+    ports:
+      - "1898:1880"
+    volumes:
+      - ./gateways/flows/gw_f09.json:/data/flows.json:ro
+      - ./gateways/settings.js:/data/settings.js:ro
+      - ./gateways/package.json:/data/package.json:ro
+      - gw_f09_data:/data/.node-red-extras
+
+  gateway-f10:
+    <<: *gateway-template
+    container_name: gateway-f10
+    hostname: gateway-f10
+    environment:
+      - FLOOR_ID=10
+      - HIVEMQ_HOST=hivemq
+      - HIVEMQ_PORT=1883
+      - ENGINE_HOST=engine
+    ports:
+      - "1899:1880"
+    volumes:
+      - ./gateways/flows/gw_f10.json:/data/flows.json:ro
+      - ./gateways/settings.js:/data/settings.js:ro
+      - ./gateways/package.json:/data/package.json:ro
+      - gw_f10_data:/data/.node-red-extras
+
+  # -------- Hybrid World Engine --------
+  # Hosts 100 gmqtt clients + 100 aiocoap servers.
+  # CoAP servers bind 5684..5783 (UDP) inside the container.
   engine:
     build: .
+    container_name: engine
+    hostname: engine
     depends_on:
-      - mosquitto
+      - hivemq
     environment:
-      - MQTT_HOST=mosquitto
+      - MQTT_HOST=hivemq
       - MQTT_PORT=1883
-      - MQTT_TOPIC_PREFIX=campus/bldg_01
+      - MQTT_TOPIC_PREFIX=campus/b01
       - SQLITE_PATH=/data/world.db
       - FAULTS_ENABLED=true
       - FAULTS_PROBABILITY=0.005
+      - COAP_BASE_PORT=5684
+      - ENGINE_BIND=0.0.0.0
+      - TRANSPORT_SPLIT=1
+    ports:
+      - "5684-5783:5684-5783/udp"
     volumes:
       - engine_data:/data
+      - ./infra/certs:/certs:ro
+    networks:
+      - campus-net
     restart: unless-stopped
 
-volumes:
-  engine_data:
+networks:
+  campus-net:
+    driver: bridge
 
+volumes:
+  hivemq_data:
+  hivemq_log:
+  tb_data:
+  tb_logs:
+  tb_gateway_logs:
+  engine_data:
+  gw_f01_data:
+  gw_f02_data:
+  gw_f03_data:
+  gw_f04_data:
+  gw_f05_data:
+  gw_f06_data:
+  gw_f07_data:
+  gw_f08_data:
+  gw_f09_data:
+  gw_f10_data:

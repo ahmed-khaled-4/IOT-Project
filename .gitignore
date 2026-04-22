@@ -16,3 +16,17 @@ data/
 # Local env (keep template in repo)
 .env
 
+# Phase 2: private keys + generated tokens must not be committed
+infra/certs/ca/*.key
+infra/certs/nodes/*.key
+infra/certs/gateways/*.key
+infra/certs/hivemq/*.key
+infra/certs/hivemq/*.p12
+infra/certs/hivemq/*.jks
+infra/certs/*.srl
+infra/certs/node_credentials.json
+infra/thingsboard/devices.csv
+
+# Runtime outputs
+logs/
+tools/out/

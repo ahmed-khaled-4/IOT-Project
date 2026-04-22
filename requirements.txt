@@ -1,6 +1,9 @@
-gmqtt
-pyyaml
-aiosqlite
-psutil
-jsonschema
-
+gmqtt>=0.6.16
+aiocoap[all]>=0.4.7
+pyyaml>=6.0
+aiosqlite>=0.19
+psutil>=5.9
+jsonschema>=4.17
+cbor2>=5.6
+cryptography>=42.0
+requests>=2.31

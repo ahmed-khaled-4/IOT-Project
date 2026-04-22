@@ -6,8 +6,7 @@ import json
 import os
 import random
 import time
-from dataclasses import dataclass
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import yaml
 
@@ -15,10 +14,19 @@ from .environment import Environment, VirtualClock
 from .faults import FaultInjector
 from .fleet import FleetManager
 from .metrics import MetricsCollector
-from .mqtt_client import MQTTClientWrapper
 from .physics import PhysicsEngine, ThermalParams
 from .persistence import Persistence
 from .room import Room
+from .security import build_mqtt_tls_ctx, load_coap_psk, load_mqtt_credentials
+from .topics import TopicScheme
+from .transport import DupFilter, RoomTransport, TransportKind
+from .transport.coap_transport import CoAPTransport
+from .transport.mqtt_transport import MQTTTransport
+
+
+# ---------------------------------------------------------------------------
+# dotenv + env overrides
+# ---------------------------------------------------------------------------
 
 
 def _load_dotenv(path: str, *, overwrite: bool = False) -> None:
@@ -63,13 +71,15 @@ def _apply_env_overrides(cfg: dict) -> dict:
         cfg["mqtt"]["broker_host"] = os.environ["MQTT_HOST"]
     if "MQTT_PORT" in os.environ:
         cfg["mqtt"]["broker_port"] = int(os.environ["MQTT_PORT"])
+    if "MQTT_TLS" in os.environ:
+        cfg["mqtt"]["tls_enabled"] = os.environ["MQTT_TLS"].lower() in ("1", "true", "yes")
     if "MQTT_TOPIC_PREFIX" in os.environ:
-        prefix = os.environ["MQTT_TOPIC_PREFIX"].strip().rstrip("/")
-        cfg["fleet"]["health_topic"] = f"{prefix}/fleet/health"
-        cfg["fleet"]["fleet_command_topic"] = f"{prefix}/fleet/command"
-        cfg["topics"]["room_telemetry_template"] = f"{prefix}/floor_{{floor}}/room_{{roomCode}}/telemetry"
-        cfg["topics"]["room_heartbeat_template"] = f"{prefix}/floor_{{floor}}/room_{{roomCode}}/heartbeat"
-        cfg["topics"]["room_command_template"] = f"{prefix}/floor_{{floor}}/room_{{roomCode}}/command"
+        cfg["topics"]["prefix"] = os.environ["MQTT_TOPIC_PREFIX"].strip().rstrip("/")
+
+    if "COAP_BASE_PORT" in os.environ:
+        cfg["coap"]["base_port"] = int(os.environ["COAP_BASE_PORT"])
+    if "COAP_BIND" in os.environ:
+        cfg["coap"]["bind_host"] = os.environ["COAP_BIND"]
 
     if "SQLITE_PATH" in os.environ:
         cfg["database"]["sqlite_path"] = os.environ["SQLITE_PATH"]
@@ -84,26 +94,64 @@ def _apply_env_overrides(cfg: dict) -> dict:
 
 def _log_factory(level: str) -> Callable[[str], None]:
     def log_fn(message: str) -> None:
-        print(json.dumps({"ts_unix": int(time.time()), "ts_monotonic": time.monotonic(), "level": level, "msg": message}))
+        print(
+            json.dumps(
+                {
+                    "ts_unix": int(time.time()),
+                    "ts_monotonic": time.monotonic(),
+                    "level": level,
+                    "msg": message,
+                }
+            )
+        )
+
     return log_fn
 
 
 def _stable_seed(room_id: str) -> int:
     import hashlib
+
     d = hashlib.sha1(room_id.encode("utf-8")).digest()
     return int.from_bytes(d[:4], byteorder="big", signed=False)
+
+
+# ---------------------------------------------------------------------------
+# Transport routing: decide MQTT vs CoAP for each room
+# ---------------------------------------------------------------------------
+
+
+def _classify_room(room: Room, cfg: dict) -> TransportKind:
+    """Rooms r{floor}01..r{floor}10 are MQTT, r{floor}11..r{floor}20 are CoAP."""
+
+    mqtt_range = cfg["transport"]["mqtt_index_range"]
+    coap_range = cfg["transport"]["coap_index_range"]
+
+    index_on_floor = room.room_code - room.floor_id * 100
+    if mqtt_range[0] <= index_on_floor <= mqtt_range[1]:
+        return TransportKind.MQTT
+    if coap_range[0] <= index_on_floor <= coap_range[1]:
+        return TransportKind.COAP
+
+    raise ValueError(
+        f"Room {room.room_id} index_on_floor={index_on_floor} doesn't fit either transport range"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Room task: transport-agnostic
+# ---------------------------------------------------------------------------
 
 
 async def room_task(
     *,
     room: Room,
     room_id: str,
-    command_queue: asyncio.Queue[Dict[str, Any]],
+    command_queue: asyncio.Queue,
     physics: PhysicsEngine,
     faults_cfg: dict,
     fault_seed: int,
     injector: FaultInjector,
-    mqtt: MQTTClientWrapper,
+    transport: RoomTransport,
     fleet: FleetManager,
     metrics: MetricsCollector,
     env: Environment,
@@ -113,18 +161,17 @@ async def room_task(
     heartbeat_interval_sec_sim: float,
     max_jitter_sec: float,
     log_fn: Callable[[str], None],
-    get_telemetry_topic: Callable[[Room], str],
-    get_heartbeat_topic: Callable[[Room], str],
     persistence: Persistence,
     stop_event: asyncio.Event,
 ) -> None:
-    # Spread startup across the tick window to avoid thundering herd
     rng = random.Random(fault_seed ^ 0xA5A5A5A5)
     jitter = rng.uniform(0.0, max_jitter_sec) if max_jitter_sec > 0 else 0.0
     if jitter > 0:
         await asyncio.sleep(jitter)
 
-    log_fn(f"room.started room_id={room_id} jitter_ms={jitter*1000:.0f}")
+    log_fn(
+        f"room.started room_id={room_id} transport={transport.kind.value} jitter_ms={jitter * 1000:.0f}"
+    )
 
     tick_index = 0
     next_heartbeat_virtual = env.virtual_epoch_now_sec() + float(heartbeat_interval_sec_sim)
@@ -134,7 +181,6 @@ async def room_task(
         start = loop.time()
         processing = 0.0
         try:
-            # Drain pending commands
             applied_any_command = False
             while True:
                 try:
@@ -158,26 +204,25 @@ async def room_task(
             if applied_any_command:
                 persistence.request_sync()
 
-            # Publish telemetry
-            publish_telemetry = (telemetry_interval_ticks <= 1) or (tick_index % telemetry_interval_ticks == 0)
+            publish_telemetry = (telemetry_interval_ticks <= 1) or (
+                tick_index % telemetry_interval_ticks == 0
+            )
             if publish_telemetry and not fault_result.dropout_active:
                 payload = room.to_telemetry_json(timestamp=int(timestamp))
                 if fault_result.telemetry_delay_sec is not None:
                     delay = float(fault_result.telemetry_delay_sec)
-                    topic = get_telemetry_topic(room)
                     payload_snapshot = dict(payload)
 
                     async def _delayed_pub():
                         await asyncio.sleep(delay)
-                        mqtt.publish(topic, json.dumps(payload_snapshot), qos=None)
+                        transport.publish_telemetry(room, payload_snapshot)
 
                     asyncio.create_task(_delayed_pub())
                 else:
-                    mqtt.publish_telemetry(room, payload)
+                    transport.publish_telemetry(room, payload)
 
-            # Publish heartbeat at fixed simulated intervals
             if not fault_result.dropout_active and timestamp >= next_heartbeat_virtual:
-                mqtt.publish_heartbeat(room)
+                transport.publish_heartbeat(room)
                 fleet.update_heartbeat(room_id)
 
                 while timestamp >= next_heartbeat_virtual:
@@ -190,8 +235,12 @@ async def room_task(
 
         processing = loop.time() - start
         metrics.record_tick_processing(processing * 1000.0)
-        # Drift compensation: subtract processing time from sleep
         await asyncio.sleep(max(0.0, tick_interval_real_sec - processing))
+
+
+# ---------------------------------------------------------------------------
+# Engine bootstrap
+# ---------------------------------------------------------------------------
 
 
 async def run_engine(args: argparse.Namespace) -> None:
@@ -239,6 +288,8 @@ async def run_engine(args: argparse.Namespace) -> None:
             beta=float(cfg["thermal"]["beta"]),
             occupancy_heat=float(cfg["thermal"]["occupancy_heat"]),
             humidity_gain=float(cfg["thermal"]["humidity_gain"]),
+            default_humidity=float(cfg["thermal"]["default_humidity"]),
+            humidity_pull=float(cfg["thermal"].get("humidity_pull", 0.03)),
         ),
         light_occupied_threshold=int(cfg["occupancy_correlation"]["light_occupied_threshold"]),
         light_unoccupied_min=int(cfg["occupancy_correlation"]["light_unoccupied_min"]),
@@ -264,17 +315,7 @@ async def run_engine(args: argparse.Namespace) -> None:
     db_states = await persistence.load_room_states()
     log_fn(f"persistence.loaded_rooms={len(db_states)}")
 
-    fleet_command_topic = str(cfg["fleet"]["fleet_command_topic"])
-    health_topic = str(cfg["fleet"]["health_topic"])
-    topic_prefix = "/".join(fleet_command_topic.split("/")[:2])
-
-    def telemetry_topic(room: Room) -> str:
-        return f"{topic_prefix}/floor_{room.floor_id:02d}/room_{room.room_code}/telemetry"
-
-    def heartbeat_topic(room: Room) -> str:
-        return f"{topic_prefix}/floor_{room.floor_id:02d}/room_{room.room_code}/heartbeat"
-
-    room_command_subscription = f"{topic_prefix}/+/+/command"
+    topics = TopicScheme(prefix=str(cfg["topics"]["prefix"]))
 
     defaults = {
         "default_temp": float(cfg["thermal"]["default_temp"]),
@@ -290,8 +331,8 @@ async def run_engine(args: argparse.Namespace) -> None:
         rooms_per_floor=rooms_per_floor,
         clock=clock,
         persistence=persistence,
-        publish_health_fn=lambda topic, payload: mqtt.publish(topic, json.dumps(payload), qos=None) if mqtt else None,
-        health_topic=health_topic,
+        publish_health_fn=lambda topic, payload: None,  # wired after MQTT transport is up
+        health_topic=topics.fleet_health(),
         heartbeat_timeout_sec=float(cfg["fleet"]["heartbeat_timeout_sec"]),
         heartbeat_check_interval_sec=1.0,
         log_fn=log_fn,
@@ -300,46 +341,94 @@ async def run_engine(args: argparse.Namespace) -> None:
         rooms_limit=rooms_limit,
     )
 
-    # Restore persisted state from SQLite
     for room_id, room in list(fleet.rooms_by_id.items()):
         row = db_states.get(room_id)
         if not row:
             continue
         fleet.rooms_by_id[room_id] = Room.from_db_row(row)
 
-    mqtt: Optional[MQTTClientWrapper] = None
+    mqtt_rooms: List[Room] = []
+    coap_rooms: List[Room] = []
+    for _rid, room in fleet.rooms_by_id.items():
+        try:
+            kind = _classify_room(room, cfg)
+        except ValueError as e:
+            log_fn(f"transport.classify_error {e}")
+            continue
+        (mqtt_rooms if kind is TransportKind.MQTT else coap_rooms).append(room)
 
-    def on_room_command(room_id: str, payload: Dict[str, Any]) -> None:
-        fleet.request_room_command(room_id, payload)
-
-    def on_fleet_command(payload: Dict[str, Any]) -> None:
-        fleet.request_fleet_command(payload)
-
-    mqtt = MQTTClientWrapper(
-        client_id="world-engine",
-        broker_host=str(cfg["mqtt"]["broker_host"]),
-        broker_port=int(cfg["mqtt"]["broker_port"]) if "broker_port" in cfg["mqtt"] else int(cfg["mqtt"]["broker_port"]),
-        qos=int(cfg["mqtt"]["qos"]),
-        fleet_command_topic=fleet_command_topic,
-        room_command_subscription=room_command_subscription,
-        room_telemetry_topic_builder=telemetry_topic,
-        room_heartbeat_topic_builder=heartbeat_topic,
-        log_fn=log_fn,
-        on_room_command=on_room_command,
-        on_fleet_command=on_fleet_command,
+    log_fn(
+        f"transport.routing mqtt_rooms={len(mqtt_rooms)} coap_rooms={len(coap_rooms)}"
     )
 
-    await mqtt.connect_and_subscribe()
+    # Shared DUP filter used by both transports
+    dup_filter = DupFilter(max_size=4096, ttl_sec=120.0)
 
-    fleet._publish_health_fn = lambda topic, payload: mqtt.publish(topic, json.dumps(payload), qos=None)
+    def on_room_command(room_id: str, payload: Dict[str, Any]) -> None:
+        if room_id == "__fleet__":
+            fleet.request_fleet_command(payload)
+            return
+        fleet.request_room_command(room_id, payload)
+
+    tls_enabled = bool(cfg["mqtt"].get("tls_enabled", False))
+    dtls_enabled = bool(cfg["coap"].get("dtls_enabled", False))
+
+    mqtt_tls_ctx = build_mqtt_tls_ctx() if tls_enabled else None
+    mqtt_credentials = load_mqtt_credentials()
+    coap_psks = load_coap_psk() if dtls_enabled else {}
+
+    if tls_enabled and mqtt_tls_ctx is None:
+        log_fn("security.tls_requested_but_ca_missing falling back to plain MQTT")
+    if mqtt_credentials:
+        log_fn(f"security.mqtt_credentials_loaded count={len(mqtt_credentials)}")
+    if coap_psks:
+        log_fn(f"security.coap_psks_loaded count={len(coap_psks)}")
+
+    mqtt_transport = MQTTTransport(
+        rooms=mqtt_rooms,
+        building_id=1,
+        broker_host=str(cfg["mqtt"]["broker_host"]),
+        broker_port=int(cfg["mqtt"].get("broker_tls_port", 8883) if tls_enabled and mqtt_tls_ctx else cfg["mqtt"]["broker_port"]),
+        topics=topics,
+        qos_telemetry=int(cfg["mqtt"].get("qos_telemetry", 1)),
+        qos_command=int(cfg["mqtt"].get("qos_command", 2)),
+        tls_ctx=mqtt_tls_ctx,
+        credentials=mqtt_credentials or None,
+        dup_filter=dup_filter,
+        log_fn=log_fn,
+    )
+    mqtt_transport.register_command_handler(on_room_command)
+
+    coap_transport = CoAPTransport(
+        rooms=coap_rooms,
+        building_id=1,
+        bind_host=str(cfg["coap"].get("bind_host", "0.0.0.0")),
+        base_port=int(cfg["coap"].get("base_port", 5684)),
+        topics=topics,
+        dtls_psk=coap_psks,
+        dup_filter=dup_filter,
+        log_fn=log_fn,
+    )
+    coap_transport.register_command_handler(on_room_command)
+
+    await mqtt_transport.start()
+    await coap_transport.start()
+
+    # Now wire fleet health publishing through the MQTT transport.
+    fleet._publish_health_fn = lambda topic, payload: mqtt_transport.publish_fleet_health(payload)
+
+    # Map room_id -> its transport for the per-room coroutines.
+    transport_for: Dict[str, RoomTransport] = {}
+    for r in mqtt_rooms:
+        transport_for[r.room_id] = mqtt_transport
+    for r in coap_rooms:
+        transport_for[r.room_id] = coap_transport
 
     stop_event = asyncio.Event()
 
     metric_tasks = [
         asyncio.create_task(
-            metrics.run_event_loop_latency_monitor(
-                stop_event=stop_event, sleep_sec=0.2
-            )
+            metrics.run_event_loop_latency_monitor(stop_event=stop_event, sleep_sec=0.2)
         ),
         asyncio.create_task(metrics.run_summary_task(stop_event=stop_event)),
     ]
@@ -358,12 +447,17 @@ async def run_engine(args: argparse.Namespace) -> None:
     telemetry_interval_ticks = int(cfg["simulation"]["telemetry_interval_ticks"])
     heartbeat_interval_sec_sim = float(cfg["fleet"]["heartbeat_interval_sec"])
 
-    rooms = list(fleet.rooms_by_id.items())
     room_tasks = []
-    for room_id, room in rooms:
+    for room_id, room in fleet.rooms_by_id.items():
         q = fleet.command_queues[room_id]
         seed = _stable_seed(room_id)
-        injector = FaultInjector(room_seed=seed, config=cfg["faults"], room_id=room_id, log_fn=log_fn)
+        injector = FaultInjector(
+            room_seed=seed, config=cfg["faults"], room_id=room_id, log_fn=log_fn
+        )
+        tr = transport_for.get(room_id)
+        if tr is None:
+            log_fn(f"transport.missing_for_room room_id={room_id}")
+            continue
         room_tasks.append(
             asyncio.create_task(
                 room_task(
@@ -374,7 +468,7 @@ async def run_engine(args: argparse.Namespace) -> None:
                     faults_cfg=cfg["faults"],
                     fault_seed=seed,
                     injector=injector,
-                    mqtt=mqtt,
+                    transport=tr,
                     fleet=fleet,
                     metrics=metrics,
                     env=env,
@@ -384,8 +478,6 @@ async def run_engine(args: argparse.Namespace) -> None:
                     heartbeat_interval_sec_sim=heartbeat_interval_sec_sim,
                     max_jitter_sec=max_jitter_sec,
                     log_fn=log_fn,
-                    get_telemetry_topic=telemetry_topic,
-                    get_heartbeat_topic=heartbeat_topic,
                     persistence=persistence,
                     stop_event=stop_event,
                 )
@@ -412,7 +504,11 @@ async def run_engine(args: argparse.Namespace) -> None:
         persistence_task.cancel()
 
         try:
-            await mqtt.disconnect()
+            await mqtt_transport.stop()
+        except Exception:
+            pass
+        try:
+            await coap_transport.stop()
         except Exception:
             pass
 
@@ -420,7 +516,7 @@ async def run_engine(args: argparse.Namespace) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Phase 1 World Engine")
+    p = argparse.ArgumentParser(description="Phase 2 Hybrid World Engine (MQTT + CoAP)")
     p.add_argument("--rooms", type=int, default=None, help="Limit room count for testing")
     p.add_argument("--duration-sec", type=float, default=None, help="Run duration in seconds")
     return p.parse_args()

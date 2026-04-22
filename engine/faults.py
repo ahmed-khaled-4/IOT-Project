@@ -73,7 +73,7 @@ class FaultInjector:
 
             if fault_type == "sensor_drift":
                 self._drift_active = True
-                if self._drift_bias == 0.0:
+                if abs(self._drift_bias) < 1e-12:
                     self._drift_sign = 1.0 if self._rng.random() >= 0.5 else -1.0
                 self._log(f"fault.triggered type=sensor_drift room_id={self._room_id} tick={tick_index} bias={self._drift_bias:.3f}")
 
@@ -97,11 +97,20 @@ class FaultInjector:
                 )
                 self._log(f"fault.triggered type=node_dropout room_id={self._room_id} tick={tick_index} until_tick={self._dropout_until_tick}")
 
-        # Apply persistent sensor drift
+        # Sensor drift: apply a small fixed step per tick (bias tracks cumulative offset).
+        # Previously the full accumulated bias was added every tick, which blew up temperature
+        # and never cleared _drift_active.
         if self._drift_active:
-            if abs(self._drift_bias) < self._drift_max:
-                self._drift_bias += self._drift_sign * self._drift_step
-            room.temperature = float(room.temperature + self._drift_bias)
+            if abs(self._drift_bias) >= self._drift_max:
+                self._drift_active = False
+                self._drift_bias = 0.0
+            else:
+                step = self._drift_sign * self._drift_step
+                self._drift_bias += step
+                room.temperature = float(room.temperature + step)
+                if abs(self._drift_bias) >= self._drift_max:
+                    self._drift_active = False
+                    self._drift_bias = 0.0
 
         # Apply frozen sensor override
         if self._frozen_until_tick is not None and tick_index < self._frozen_until_tick:

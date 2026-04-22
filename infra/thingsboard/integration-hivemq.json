@@ -1,0 +1,45 @@
+{
+  "name": "HiveMQ-MQTT-Integration",
+  "type": "MQTT",
+  "enabled": true,
+  "debugMode": true,
+  "allowCreateDevicesOrAssets": true,
+  "routingKey": "campus-hivemq",
+  "secret": "campus-hivemq-secret",
+  "converter": {
+    "name": "HiveMQ Uplink Converter",
+    "type": "JS",
+    "debugMode": true,
+    "configuration": {
+      "decoder": "// Phase 2 uplink converter\n// Incoming MQTT topic: campus/b01/fXX/rYYY/{telemetry|heartbeat|status|response|summary}\n// Telemetry MUST use [{ ts, values }] — flat objects with a \"ts\" key are not reliable in TB 3.7 integrations.\nvar topic = metadata['mqtt_topicName'] || metadata['topic'] || '';\nvar parts = topic.split('/');\nif (parts.length < 5) {\n    return { deviceName: 'unknown', deviceType: 'MQTT-ThermalSensor', telemetry: [{ ts: Date.now(), values: {} }] };\n}\nvar building = parts[1];\nvar floor = parts[2];\nvar room = parts[3];\nvar suffix = parts[4];\nvar deviceName = building + '-' + floor + '-' + room;\nvar roomNum = parseInt(String(room).replace(/^r/, ''), 10) || 0;\nvar isCoap = roomNum % 100 >= 11;\nvar deviceType = isCoap ? 'CoAP-ThermalSensor' : 'MQTT-ThermalSensor';\nvar result = {\n    deviceName: deviceName,\n    deviceType: deviceType,\n    attributes: {\n        floor: floor,\n        room: room,\n        building: building,\n        transport: isCoap ? 'coap' : 'mqtt'\n    },\n    telemetry: [{ ts: Date.now(), values: {} }]\n};\nvar data = (typeof decodedPayload === 'string') ? JSON.parse(decodedPayload) : decodedPayload;\nif (suffix === 'telemetry') {\n    var tsMs = (data.timestamp != null && data.timestamp > 0) ? data.timestamp * 1000 : Date.now();\n    result.telemetry = [{\n        ts: tsMs,\n        values: {\n            temperature: data.temperature,\n            humidity: data.humidity,\n            occupancy: data.occupancy,\n            light_level: data.light_level,\n            hvac_mode: data.hvac_mode,\n            lighting_dimmer: data.lighting_dimmer\n        }\n    }];\n} else if (suffix === 'heartbeat') {\n    var tsHb = (data.timestamp != null && data.timestamp > 0) ? data.timestamp * 1000 : Date.now();\n    result.telemetry = [{ ts: tsHb, values: { heartbeat_ts: tsHb, status: data.status || 'Healthy' } }];\n} else if (suffix === 'status') {\n    result.attributes.state = data.state || 'unknown';\n    result.telemetry = [{ ts: Date.now(), values: { state: data.state } }];\n} else if (suffix === 'response') {\n    result.telemetry = [{ ts: Date.now(), values: { response: data } }];\n}\nreturn result;"
+    }
+  },
+  "downlinkConverter": {
+    "name": "HiveMQ Downlink Converter",
+    "type": "JS",
+    "debugMode": true,
+    "configuration": {
+      "encoder": "// Phase 2 downlink converter: RPC request -> MQTT cmd\nvar deviceName = msg.deviceName || metadata['deviceName'];\nvar m = deviceName.match(/^(b\\d{2})-(f\\d{2})-(r\\d+)$/);\nif (!m) { return { topic: 'campus/dead-letter', payload: {} }; }\nvar topic = 'campus/' + m[1] + '/' + m[2] + '/' + m[3] + '/cmd';\nreturn { topic: topic, qos: 2, payload: msg, metadata: { contentType: 'application/json' } };"
+    }
+  },
+  "configuration": {
+    "clientConfiguration": {
+      "host": "hivemq",
+      "port": 1883,
+      "cleanSession": true,
+      "ssl": false,
+      "credentials": { "type": "basic", "username": "thingsboard", "password": "changeit" },
+      "connectTimeoutSec": 10,
+      "mqttKeepAlive": 60,
+      "maxBytesInMessage": 32368
+    },
+    "topicFilters": [
+      { "filter": "campus/b01/+/+/telemetry", "qos": 1 },
+      { "filter": "campus/b01/+/+/heartbeat", "qos": 1 },
+      { "filter": "campus/b01/+/+/status", "qos": 1 },
+      { "filter": "campus/b01/+/+/response", "qos": 1 },
+      { "filter": "campus/b01/+/summary", "qos": 1 }
+    ],
+    "downlinkTopicPattern": "campus/b01/${floor}/${room}/cmd"
+  }
+}

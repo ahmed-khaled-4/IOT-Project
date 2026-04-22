@@ -1,0 +1,602 @@
+{
+  "b01-f01-r101": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f01-r102": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f01-r103": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f01-r104": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f01-r105": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f01-r106": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f01-r107": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f01-r108": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f01-r109": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f01-r110": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f02-r201": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f02-r202": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f02-r203": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f02-r204": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f02-r205": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f02-r206": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f02-r207": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f02-r208": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f02-r209": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f02-r210": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f03-r301": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f03-r302": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f03-r303": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f03-r304": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f03-r305": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f03-r306": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f03-r307": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f03-r308": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f03-r309": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f03-r310": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f04-r401": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f04-r402": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f04-r403": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f04-r404": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f04-r405": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f04-r406": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f04-r407": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f04-r408": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f04-r409": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f04-r410": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f05-r501": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f05-r502": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f05-r503": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f05-r504": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f05-r505": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f05-r506": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f05-r507": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f05-r508": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f05-r509": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f05-r510": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f06-r601": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f06-r602": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f06-r603": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f06-r604": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f06-r605": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f06-r606": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f06-r607": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f06-r608": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f06-r609": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f06-r610": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f07-r701": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f07-r702": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f07-r703": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f07-r704": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f07-r705": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f07-r706": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f07-r707": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f07-r708": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f07-r709": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f07-r710": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f08-r801": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f08-r802": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f08-r803": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f08-r804": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f08-r805": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f08-r806": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f08-r807": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f08-r808": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f08-r809": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f08-r810": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f09-r901": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f09-r902": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f09-r903": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f09-r904": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f09-r905": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f09-r906": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f09-r907": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f09-r908": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f09-r909": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f09-r910": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f10-r1001": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f10-r1002": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f10-r1003": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f10-r1004": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f10-r1005": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f10-r1006": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f10-r1007": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f10-r1008": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f10-r1009": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  },
+  "b01-f10-r1010": {
+    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
+    "connectorName": "HiveMQ Campus",
+    "deviceType": "MQTT-ThermalSensor",
+    "renaming": null
+  }
+}

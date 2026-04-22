@@ -1,0 +1,153 @@
+{
+  "ruleChain": {
+    "additionalInfo": {
+      "description": "Phase 2 alarm rule chain. Routes telemetry from HiveMQ-backed devices, raises threshold alarms (HighTemp, DeviceOffline) and forwards commands downstream."
+    },
+    "name": "Phase 2 Campus Alarms",
+    "type": "CORE",
+    "firstRuleNodeId": null,
+    "root": false,
+    "debugMode": false,
+    "configuration": null
+  },
+  "metadata": {
+    "firstNodeIndex": 0,
+    "nodes": [
+      {
+        "type": "org.thingsboard.rule.engine.filter.TbMsgTypeSwitchNode",
+        "name": "Message Type Switch",
+        "debugMode": false,
+        "configuration": {
+          "version": 0
+        },
+        "additionalInfo": {
+          "layoutX": 200,
+          "layoutY": 150
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNode",
+        "name": "Save Telemetry",
+        "debugMode": false,
+        "configuration": {
+          "defaultTTL": 0,
+          "useServerTs": false,
+          "skipLatestPersistence": false
+        },
+        "additionalInfo": {
+          "layoutX": 600,
+          "layoutY": 90
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.metadata.TbGetAttributesNode",
+        "name": "Read Room Attributes",
+        "debugMode": false,
+        "configuration": {
+          "fetchTo": "METADATA",
+          "clientAttributeNames": [],
+          "sharedAttributeNames": ["highTempThreshold"],
+          "serverAttributeNames": ["floor", "transport"],
+          "latestTsKeyNames": [],
+          "tellFailureIfAbsent": false,
+          "getLatestValueWithTs": false
+        },
+        "additionalInfo": {
+          "layoutX": 600,
+          "layoutY": 200
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.filter.TbJsFilterNode",
+        "name": "Temp > threshold?",
+        "debugMode": false,
+        "configuration": {
+          "scriptLang": "JS",
+          "jsScript": "return typeof msg.temperature === 'number' && msg.temperature > (parseFloat(metadata.shared_highTempThreshold) || 30.0);"
+        },
+        "additionalInfo": {
+          "layoutX": 900,
+          "layoutY": 200
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.action.TbCreateAlarmNode",
+        "name": "Raise HighTemp Alarm",
+        "debugMode": false,
+        "configuration": {
+          "scriptLang": "JS",
+          "alarmType": "HighTemp",
+          "severity": "MAJOR",
+          "propagate": true,
+          "alarmDetailsBuildJs": "var details = { temperature: msg.temperature, floor: metadata.ss_floor, transport: metadata.ss_transport }; return details;"
+        },
+        "additionalInfo": {
+          "layoutX": 1200,
+          "layoutY": 200
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.filter.TbJsFilterNode",
+        "name": "Offline status?",
+        "debugMode": false,
+        "configuration": {
+          "scriptLang": "JS",
+          "jsScript": "return msg.state === 'offline' || msgType === 'INACTIVITY_EVENT';"
+        },
+        "additionalInfo": {
+          "layoutX": 900,
+          "layoutY": 340
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.action.TbCreateAlarmNode",
+        "name": "Raise DeviceOffline",
+        "debugMode": false,
+        "configuration": {
+          "scriptLang": "JS",
+          "alarmType": "DeviceOffline",
+          "severity": "CRITICAL",
+          "propagate": true,
+          "alarmDetailsBuildJs": "return { reason: msg.reason || 'lwt', state: 'offline' };"
+        },
+        "additionalInfo": {
+          "layoutX": 1200,
+          "layoutY": 340
+        }
+      }
+    ],
+    "connections": [
+      {
+        "fromIndex": 0,
+        "toIndex": 1,
+        "type": "Post telemetry"
+      },
+      {
+        "fromIndex": 0,
+        "toIndex": 2,
+        "type": "Post telemetry"
+      },
+      {
+        "fromIndex": 2,
+        "toIndex": 3,
+        "type": "Success"
+      },
+      {
+        "fromIndex": 3,
+        "toIndex": 4,
+        "type": "True"
+      },
+      {
+        "fromIndex": 0,
+        "toIndex": 5,
+        "type": "Post attributes"
+      },
+      {
+        "fromIndex": 5,
+        "toIndex": 6,
+        "type": "True"
+      }
+    ],
+    "ruleChainConnections": null
+  }
+}

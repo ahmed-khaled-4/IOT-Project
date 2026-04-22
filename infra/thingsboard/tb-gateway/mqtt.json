@@ -1,0 +1,129 @@
+{
+  "broker": {
+    "host": "hivemq",
+    "port": 1883,
+    "clientId": "ThingsBoard_Gateway_Campus",
+    "version": 5,
+    "maxMessageNumberPerWorker": 10,
+    "maxNumberOfWorkers": 100,
+    "sendDataOnlyOnChange": false,
+    "keepAlive": 60,
+    "cleanSession": true,
+    "cleanStart": true,
+    "sessionExpiryInterval": 0,
+    "security": {
+      "type": "basic",
+      "username": "thingsboard",
+      "password": "changeit"
+    }
+  },
+  "mapping": [
+    {
+      "topicFilter": "campus/b01/+/+/telemetry",
+      "subscriptionQos": 1,
+      "converter": {
+        "type": "json",
+        "deviceInfo": {
+          "deviceNameExpressionSource": "message",
+          "deviceNameExpression": "${sensor_id}",
+          "deviceProfileExpressionSource": "message",
+          "deviceProfileExpression": "${tb_profile}"
+        },
+        "sendDataOnlyOnChange": false,
+        "timeout": 60000,
+        "attributes": [],
+        "timeseries": [
+          {
+            "type": "double",
+            "key": "temperature",
+            "value": "${temperature}"
+          },
+          {
+            "type": "double",
+            "key": "humidity",
+            "value": "${humidity}"
+          },
+          {
+            "type": "bool",
+            "key": "occupancy",
+            "value": "${occupancy}"
+          },
+          {
+            "type": "long",
+            "key": "light_level",
+            "value": "${light_level}"
+          },
+          {
+            "type": "string",
+            "key": "hvac_mode",
+            "value": "${hvac_mode}"
+          },
+          {
+            "type": "long",
+            "key": "lighting_dimmer",
+            "value": "${lighting_dimmer}"
+          }
+        ]
+      }
+    },
+    {
+      "topicFilter": "campus/b01/+/+/heartbeat",
+      "subscriptionQos": 1,
+      "converter": {
+        "type": "json",
+        "deviceInfo": {
+          "deviceNameExpressionSource": "message",
+          "deviceNameExpression": "${sensor_id}",
+          "deviceProfileExpressionSource": "message",
+          "deviceProfileExpression": "${tb_profile}"
+        },
+        "sendDataOnlyOnChange": false,
+        "timeout": 60000,
+        "attributes": [],
+        "timeseries": [
+          {
+            "type": "string",
+            "key": "heartbeat_status",
+            "value": "${status}"
+          },
+          {
+            "type": "long",
+            "key": "heartbeat_timestamp",
+            "value": "${timestamp}"
+          }
+        ]
+      }
+    },
+    {
+      "topicFilter": "campus/b01/+/+/status",
+      "subscriptionQos": 1,
+      "converter": {
+        "type": "json",
+        "deviceInfo": {
+          "deviceNameExpressionSource": "message",
+          "deviceNameExpression": "${sensor_id}",
+          "deviceProfileExpressionSource": "message",
+          "deviceProfileExpression": "${tb_profile}"
+        },
+        "sendDataOnlyOnChange": false,
+        "timeout": 60000,
+        "attributes": [],
+        "timeseries": [
+          {
+            "type": "string",
+            "key": "link_state",
+            "value": "${state}"
+          }
+        ]
+      }
+    }
+  ],
+  "requestsMapping": {
+    "connectRequests": [],
+    "disconnectRequests": [],
+    "attributeRequests": [],
+    "attributeUpdates": [],
+    "serverSideRpc": []
+  },
+  "id": "7448f658-e7f1-4427-a94a-6ca6338c40cf"
+}

@@ -1,0 +1,3 @@
+# This file tells the stock tb-gateway entrypoint not to overwrite
+# ./tb_gateway.json and ./mqtt.json on first container start when using
+# a bind-mounted config directory.

@@ -30,9 +30,9 @@ class BenchmarkMQTTCollector:
     def attach(self, client: MQTTClient) -> None:
         def on_connect(client, flags, rc, properties):
             # telemetry
-            client.subscribe("campus/bldg_01/+/+/telemetry", qos=0)
+            client.subscribe("campus/b01/+/+/telemetry", qos=0)
             # heartbeat
-            client.subscribe("campus/bldg_01/+/+/heartbeat", qos=0)
+            client.subscribe("campus/b01/+/+/heartbeat", qos=0)
 
         def on_message(client, topic, payload, qos, properties):
             try:
@@ -78,7 +78,7 @@ async def main_async(args):
     env = os.environ.copy()
     env.setdefault("MQTT_HOST", mqtt_host)
     env.setdefault("MQTT_PORT", str(mqtt_port))
-    env.setdefault("MQTT_TOPIC_PREFIX", "campus/bldg_01")
+    env.setdefault("MQTT_TOPIC_PREFIX", "campus/b01")
 
     cmd = [
         sys.executable,

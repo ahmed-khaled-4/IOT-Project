@@ -1,3 +1,17 @@
+# Phase 2 configuration for the Hybrid MQTT + CoAP World Engine.
+#
+# Topic scheme follows the rubric:
+#   campus/b01/fXX/rXXX/telemetry
+#   campus/b01/fXX/rXXX/heartbeat
+#   campus/b01/fXX/rXXX/cmd
+#   campus/b01/fXX/rXXX/response
+#   campus/b01/fXX/rXXX/status        (LWT)
+#   campus/b01/fXX/summary            (edge-thinned aggregate)
+#   campus/b01/fleet/health
+#
+# Rooms per floor (20) are split 10 MQTT (room_code {f}01..{f}10)
+# and 10 CoAP (room_code {f}11..{f}20). See `transport.split_rule`.
+
 campus:
   buildings: 1
   floors_per_building: 10
@@ -16,6 +30,8 @@ thermal:
   occupancy_heat: 0.05
   default_temp: 22.0
   default_humidity: 45.0
+  # Per tick, nudge humidity toward default_humidity (prevents slow drift to 0%/100% with occupancy bias).
+  humidity_pull: 0.03
   outside_temp_base: 35.0
   outside_temp_amplitude: 10.0
   humidity_gain: 0.3
@@ -50,21 +66,43 @@ faults:
 fleet:
   heartbeat_interval_sec: 5
   heartbeat_timeout_sec: 60
-  health_topic: campus/bldg_01/fleet/health
-  fleet_command_topic: campus/bldg_01/fleet/command
+  health_topic: campus/b01/fleet/health
+  fleet_command_topic: campus/b01/fleet/cmd
 
 mqtt:
-  broker_host: mosquitto
+  broker_host: hivemq
   broker_port: 1883
-  qos: 1
+  broker_tls_port: 8883
+  tls_enabled: false
+  qos_telemetry: 1
+  qos_command: 2
+  keepalive_sec: 60
+  session_expiry_sec: 3600
+
+coap:
+  bind_host: 0.0.0.0
+  base_port: 5684
+  dtls_enabled: false
+  observe_max_age_sec: 60
+
+transport:
+  # Rooms with (room_code % 100) between mqtt_range are MQTT nodes,
+  # between coap_range are CoAP nodes.  room_code = floor*100 + index(1..20).
+  mqtt_index_range: [1, 10]
+  coap_index_range: [11, 20]
 
 topics:
-  room_telemetry_template: campus/bldg_{building}/floor_{floor}/room_{roomCode}/telemetry
-  room_heartbeat_template: campus/bldg_{building}/floor_{floor}/room_{roomCode}/heartbeat
-  room_command_template: campus/bldg_{building}/floor_{floor}/room_{roomCode}/command
+  prefix: campus/b01
+  room_telemetry_template: campus/b01/f{floor:02d}/r{room_code}/telemetry
+  room_heartbeat_template: campus/b01/f{floor:02d}/r{room_code}/heartbeat
+  room_command_template: campus/b01/f{floor:02d}/r{room_code}/cmd
+  room_response_template: campus/b01/f{floor:02d}/r{room_code}/response
+  room_status_template: campus/b01/f{floor:02d}/r{room_code}/status
+  floor_summary_template: campus/b01/f{floor:02d}/summary
 
 performance:
   latency_threshold_ms: 200
+  rtt_target_ms: 500
 
 logging:
   level: INFO

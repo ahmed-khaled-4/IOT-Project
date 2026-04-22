@@ -81,6 +81,13 @@ class Room:
             self.lighting_dimmer = int(payload["lighting_dimmer"])
         self.last_update = now_unix_sec()
 
+    def thingsboard_device_profile(self) -> str:
+        """Device profile name in ThingsBoard (matches bootstrap MQTT vs CoAP split)."""
+        idx = self.room_code % 100
+        if 11 <= idx <= 20:
+            return "CoAP-ThermalSensor"
+        return "MQTT-ThermalSensor"
+
     def validate_and_clamp(self) -> None:
         self.temperature = clamp(self.temperature, 15.0, 50.0)
         self.humidity = clamp(self.humidity, 0.0, 100.0)
@@ -95,8 +102,14 @@ class Room:
         return {
             "sensor_id": self.room_id,
             "timestamp": int(timestamp),
-            "temperature": float(self.temperature),
-            "humidity": float(self.humidity),
+            # IoT Gateway 3.7 JSON converter uses data["ts"] else data["timestamp"] for *all* keys (ignores tsField).
+            # ThingsBoard expects Unix ms — set `ts` explicitly; keep seconds in `timestamp` for campus tooling.
+            "ts": int(timestamp) * 1000,
+            "tb_ts_ms": int(timestamp) * 1000,
+            "tb_profile": self.thingsboard_device_profile(),
+            # Two decimals: matches what operators type in manual MQTT tests; physics still uses full float internally.
+            "temperature": round(float(self.temperature), 2),
+            "humidity": round(float(self.humidity), 2),
             "occupancy": bool(self.occupancy),
             "light_level": int(self.light_level),
             "hvac_mode": str(self.hvac_mode),

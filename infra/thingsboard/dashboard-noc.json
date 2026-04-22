@@ -1,0 +1,213 @@
+{
+  "title": "Phase 2 NOC - Unified Fleet Health",
+  "name": "Phase 2 NOC - Unified Fleet Health",
+  "image": null,
+  "mobileHide": false,
+  "mobileOrder": null,
+  "configuration": {
+    "description": "Phase 2 Network Operations Center. Live status for all 200 rooms (100 MQTT + 100 CoAP). Seed dashboard: open in edit mode to add floor-summary cards, RTT histogram, and the Toggle-Heat RPC button using widgets exported from the UI.",
+    "widgets": {
+      "11111111-1111-1111-1111-111111111111": {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "isSystemType": true,
+        "bundleAlias": "charts",
+        "typeAlias": "basic_timeseries",
+        "type": "timeseries",
+        "title": "Fleet Temperature (All Rooms)",
+        "sizeX": 16,
+        "sizeY": 8,
+        "row": 0,
+        "col": 0,
+        "config": {
+          "datasources": [
+            {
+              "type": "entity",
+              "name": "All Rooms",
+              "entityAliasId": "22222222-2222-2222-2222-222222222222",
+              "filterId": null,
+              "dataKeys": [
+                {
+                  "name": "temperature",
+                  "type": "timeseries",
+                  "label": "Temperature",
+                  "color": "#2196f3",
+                  "aggregationType": "NONE",
+                  "settings": {},
+                  "_hash": 0.4123
+                }
+              ]
+            }
+          ],
+          "showTitle": true,
+          "backgroundColor": "#fff",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {},
+          "title": "Fleet Temperature (All Rooms)",
+          "dropShadow": true,
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "showTitleIcon": false,
+          "titleTooltip": "",
+          "titleStyle": { "fontSize": "16px", "fontWeight": 400 },
+          "useDashboardTimewindow": true,
+          "showLegend": true,
+          "legendConfig": {
+            "direction": "column",
+            "position": "bottom",
+            "showMin": false,
+            "showMax": false,
+            "showAvg": false,
+            "showTotal": false,
+            "showLatest": false
+          }
+        }
+      },
+      "33333333-3333-3333-3333-333333333333": {
+        "id": "33333333-3333-3333-3333-333333333333",
+        "isSystemType": true,
+        "bundleAlias": "alarm_widgets",
+        "typeAlias": "alarms_table",
+        "type": "alarm",
+        "title": "Active Alarms",
+        "sizeX": 24,
+        "sizeY": 8,
+        "row": 8,
+        "col": 0,
+        "config": {
+          "datasources": [],
+          "alarmSource": {
+            "type": "entity",
+            "name": "All Rooms",
+            "entityAliasId": "22222222-2222-2222-2222-222222222222",
+            "dataKeys": [
+              {
+                "name": "createdTime",
+                "type": "alarm",
+                "label": "Created",
+                "color": "#000000",
+                "settings": {},
+                "_hash": 0.21
+              },
+              {
+                "name": "type",
+                "type": "alarm",
+                "label": "Type",
+                "color": "#000000",
+                "settings": {},
+                "_hash": 0.22
+              },
+              {
+                "name": "severity",
+                "type": "alarm",
+                "label": "Severity",
+                "color": "#000000",
+                "settings": {},
+                "_hash": 0.23
+              },
+              {
+                "name": "status",
+                "type": "alarm",
+                "label": "Status",
+                "color": "#000000",
+                "settings": {},
+                "_hash": 0.24
+              },
+              {
+                "name": "originator",
+                "type": "alarm",
+                "label": "Room",
+                "color": "#000000",
+                "settings": {},
+                "_hash": 0.25
+              }
+            ]
+          },
+          "alarmFilterConfig": {
+            "statusList": ["ACTIVE"],
+            "typeList": [],
+            "severityList": [],
+            "searchPropagatedAlarms": true
+          },
+          "alarmsPollingInterval": 5,
+          "displayDetails": true,
+          "showTitle": true,
+          "backgroundColor": "#fff",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {},
+          "title": "Active Alarms",
+          "dropShadow": true,
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "useDashboardTimewindow": true
+        }
+      }
+    },
+    "states": {
+      "default": {
+        "name": "Fleet Overview",
+        "root": true,
+        "layouts": {
+          "main": {
+            "widgets": {
+              "11111111-1111-1111-1111-111111111111": { "sizeX": 16, "sizeY": 8, "row": 0, "col": 0 },
+              "33333333-3333-3333-3333-333333333333": { "sizeX": 24, "sizeY": 8, "row": 8, "col": 0 }
+            },
+            "gridSettings": {
+              "backgroundColor": "#eeeeee",
+              "color": "rgba(0, 0, 0, 0.87)",
+              "columns": 24,
+              "margin": 10,
+              "backgroundSizeMode": "100%",
+              "autoFillHeight": false,
+              "mobileAutoFillHeight": false,
+              "mobileRowHeight": 70
+            }
+          }
+        }
+      }
+    },
+    "entityAliases": {
+      "22222222-2222-2222-2222-222222222222": {
+        "id": "22222222-2222-2222-2222-222222222222",
+        "alias": "All Rooms",
+        "filter": {
+          "type": "entityName",
+          "resolveMultiple": true,
+          "singleEntity": null,
+          "entityType": "DEVICE",
+          "entityNameFilter": "b01-"
+        }
+      }
+    },
+    "filters": {},
+    "timewindow": {
+      "hideInterval": false,
+      "hideLastInterval": false,
+      "hideQuickInterval": false,
+      "hideAggregation": false,
+      "hideAggInterval": false,
+      "hideTimezone": false,
+      "selectedTab": 0,
+      "realtime": {
+        "realtimeType": 0,
+        "interval": 1000,
+        "timewindowMs": 60000
+      },
+      "aggregation": {
+        "type": "NONE",
+        "limit": 25000
+      }
+    },
+    "settings": {
+      "stateControllerId": "default",
+      "showTitle": false,
+      "showDashboardsSelect": true,
+      "showEntitiesSelect": true,
+      "showDashboardTimewindow": true,
+      "showDashboardExport": true,
+      "toolbarAlwaysOpen": true
+    }
+  }
+}

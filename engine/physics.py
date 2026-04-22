@@ -13,6 +13,8 @@ class ThermalParams:
     beta: float        # HVAC strength
     occupancy_heat: float
     humidity_gain: float
+    default_humidity: float
+    humidity_pull: float  # per tick pulls humidity toward default_humidity (stops runaway creep)
 
     def hvac_power(self, hvac_mode: str) -> float:
         mode = str(hvac_mode).upper()
@@ -73,9 +75,15 @@ class PhysicsEngine:
         t_next = t_curr + leakage + hvac_delta + occupancy_delta
         room.temperature = float(t_next)
 
-        # Humidity correlates with temp changes
+        # Humidity correlates with temp changes, with gentle pull toward nominal RH
         temp_delta = t_next - t_curr
-        hum_next = room.humidity + self._p.humidity_gain * temp_delta + (0.2 if room.occupancy else -0.1)
+        hum_pull = self._p.humidity_pull * (self._p.default_humidity - room.humidity)
+        hum_next = (
+            room.humidity
+            + self._p.humidity_gain * temp_delta
+            + (0.2 if room.occupancy else -0.1)
+            + hum_pull
+        )
         room.humidity = float(hum_next)
 
         # Light level correlates with occupancy

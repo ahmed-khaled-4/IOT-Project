@@ -1,0 +1,486 @@
+[
+  {
+    "id": "floor-gateway-tab",
+    "type": "tab",
+    "label": "Floor 01 Gateway",
+    "disabled": false,
+    "info": "Phase 2 Floor Gateway. Bridges CoAP Observe streams (UDP) and MQTT traffic (TCP) between 20 rooms on this floor and the HiveMQ backbone, plus 60s edge thinning, offline autonomy, and MQTT DUP-flag deduplication.",
+    "env": []
+  },
+  {
+    "id": "hivemq-broker-config",
+    "type": "mqtt-broker",
+    "name": "hivemq-campus",
+    "broker": "hivemq",
+    "port": "1883",
+    "clientid": "",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": "5",
+    "keepalive": "60",
+    "cleansession": true,
+    "birthTopic": "",
+    "birthQos": "0",
+    "birthPayload": "",
+    "birthMsg": {},
+    "closeTopic": "",
+    "closeQos": "0",
+    "closePayload": "",
+    "closeMsg": {},
+    "willTopic": "",
+    "willQos": "0",
+    "willPayload": "",
+    "willMsg": {},
+    "sessionExpiry": ""
+  },
+  {
+    "id": "f01-mqtt-tel-out",
+    "type": "mqtt out",
+    "z": "floor-gateway-tab",
+    "name": "tel-out-f01",
+    "x": 900,
+    "y": 200,
+    "wires": [],
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "hivemq-broker-config"
+  },
+  {
+    "id": "f01-func-coap2mqtt",
+    "type": "function",
+    "z": "floor-gateway-tab",
+    "name": "coap->mqtt f01",
+    "x": 600,
+    "y": 200,
+    "wires": [
+      [
+        "f01-mqtt-tel-out",
+        "f01-func-autonomy"
+      ]
+    ],
+    "func": "// Re-package a CoAP Observe notification as an MQTT telemetry publish\n// for the same room. Keeps topic structure identical to native MQTT\n// nodes so ThingsBoard sees a unified stream.\nlet payload = msg.payload;\nif (Buffer.isBuffer(payload)) {\n    try { payload = JSON.parse(payload.toString('utf8')); } catch (e) { return null; }\n}\nif (typeof payload === 'string') {\n    try { payload = JSON.parse(payload); } catch (e) { return null; }\n}\nconst sensorId = (payload && payload.sensor_id) || '';\nconst m = sensorId.match(/^b(\\d{2})-f(\\d{2})-r(\\d+)$/);\nif (!m) { return null; }\nconst floor = '01';\nconst roomCode = m[3];\nmsg.topic = `campus/b01/f${floor}/r${roomCode}/telemetry`;\nmsg.qos = 1;\nmsg.retain = false;\nmsg.payload = payload;\n// Track for edge thinning\nlet bucket = flow.get('thinBucket') || {temp: [], hum: [], n: 0};\nif (typeof payload.temperature === 'number') bucket.temp.push(payload.temperature);\nif (typeof payload.humidity === 'number') bucket.hum.push(payload.humidity);\nbucket.n += 1;\nflow.set('thinBucket', bucket);\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": []
+  },
+  {
+    "id": "f01-coap-obs-r111",
+    "type": "coap request",
+    "z": "floor-gateway-tab",
+    "name": "Observe r111",
+    "x": 250,
+    "y": 100,
+    "wires": [
+      [
+        "f01-func-coap2mqtt"
+      ]
+    ],
+    "method": "GET",
+    "observe": true,
+    "name_payload": false,
+    "usetls": false,
+    "content-format": "application/json",
+    "url": "coap://engine:5684/f01/r111/telemetry"
+  },
+  {
+    "id": "f01-coap-obs-r112",
+    "type": "coap request",
+    "z": "floor-gateway-tab",
+    "name": "Observe r112",
+    "x": 250,
+    "y": 140,
+    "wires": [
+      [
+        "f01-func-coap2mqtt"
+      ]
+    ],
+    "method": "GET",
+    "observe": true,
+    "name_payload": false,
+    "usetls": false,
+    "content-format": "application/json",
+    "url": "coap://engine:5685/f01/r112/telemetry"
+  },
+  {
+    "id": "f01-coap-obs-r113",
+    "type": "coap request",
+    "z": "floor-gateway-tab",
+    "name": "Observe r113",
+    "x": 250,
+    "y": 180,
+    "wires": [
+      [
+        "f01-func-coap2mqtt"
+      ]
+    ],
+    "method": "GET",
+    "observe": true,
+    "name_payload": false,
+    "usetls": false,
+    "content-format": "application/json",
+    "url": "coap://engine:5686/f01/r113/telemetry"
+  },
+  {
+    "id": "f01-coap-obs-r114",
+    "type": "coap request",
+    "z": "floor-gateway-tab",
+    "name": "Observe r114",
+    "x": 250,
+    "y": 220,
+    "wires": [
+      [
+        "f01-func-coap2mqtt"
+      ]
+    ],
+    "method": "GET",
+    "observe": true,
+    "name_payload": false,
+    "usetls": false,
+    "content-format": "application/json",
+    "url": "coap://engine:5687/f01/r114/telemetry"
+  },
+  {
+    "id": "f01-coap-obs-r115",
+    "type": "coap request",
+    "z": "floor-gateway-tab",
+    "name": "Observe r115",
+    "x": 250,
+    "y": 260,
+    "wires": [
+      [
+        "f01-func-coap2mqtt"
+      ]
+    ],
+    "method": "GET",
+    "observe": true,
+    "name_payload": false,
+    "usetls": false,
+    "content-format": "application/json",
+    "url": "coap://engine:5688/f01/r115/telemetry"
+  },
+  {
+    "id": "f01-coap-obs-r116",
+    "type": "coap request",
+    "z": "floor-gateway-tab",
+    "name": "Observe r116",
+    "x": 250,
+    "y": 300,
+    "wires": [
+      [
+        "f01-func-coap2mqtt"
+      ]
+    ],
+    "method": "GET",
+    "observe": true,
+    "name_payload": false,
+    "usetls": false,
+    "content-format": "application/json",
+    "url": "coap://engine:5689/f01/r116/telemetry"
+  },
+  {
+    "id": "f01-coap-obs-r117",
+    "type": "coap request",
+    "z": "floor-gateway-tab",
+    "name": "Observe r117",
+    "x": 250,
+    "y": 340,
+    "wires": [
+      [
+        "f01-func-coap2mqtt"
+      ]
+    ],
+    "method": "GET",
+    "observe": true,
+    "name_payload": false,
+    "usetls": false,
+    "content-format": "application/json",
+    "url": "coap://engine:5690/f01/r117/telemetry"
+  },
+  {
+    "id": "f01-coap-obs-r118",
+    "type": "coap request",
+    "z": "floor-gateway-tab",
+    "name": "Observe r118",
+    "x": 250,
+    "y": 380,
+    "wires": [
+      [
+        "f01-func-coap2mqtt"
+      ]
+    ],
+    "method": "GET",
+    "observe": true,
+    "name_payload": false,
+    "usetls": false,
+    "content-format": "application/json",
+    "url": "coap://engine:5691/f01/r118/telemetry"
+  },
+  {
+    "id": "f01-coap-obs-r119",
+    "type": "coap request",
+    "z": "floor-gateway-tab",
+    "name": "Observe r119",
+    "x": 250,
+    "y": 420,
+    "wires": [
+      [
+        "f01-func-coap2mqtt"
+      ]
+    ],
+    "method": "GET",
+    "observe": true,
+    "name_payload": false,
+    "usetls": false,
+    "content-format": "application/json",
+    "url": "coap://engine:5692/f01/r119/telemetry"
+  },
+  {
+    "id": "f01-coap-obs-r120",
+    "type": "coap request",
+    "z": "floor-gateway-tab",
+    "name": "Observe r120",
+    "x": 250,
+    "y": 460,
+    "wires": [
+      [
+        "f01-func-coap2mqtt"
+      ]
+    ],
+    "method": "GET",
+    "observe": true,
+    "name_payload": false,
+    "usetls": false,
+    "content-format": "application/json",
+    "url": "coap://engine:5693/f01/r120/telemetry"
+  },
+  {
+    "id": "f01-mqtt-resp-out",
+    "type": "mqtt out",
+    "z": "floor-gateway-tab",
+    "name": "resp-out-f01",
+    "x": 1100,
+    "y": 520,
+    "wires": [],
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "hivemq-broker-config"
+  },
+  {
+    "id": "f01-func-ack2resp",
+    "type": "function",
+    "z": "floor-gateway-tab",
+    "name": "CoAP ACK -> MQTT response",
+    "x": 880,
+    "y": 520,
+    "wires": [
+      [
+        "f01-mqtt-resp-out"
+      ]
+    ],
+    "func": "// Received a CoAP ACK from the room; republish a .../response\n// message so ThingsBoard can confirm the command landed.\nlet payload = msg.payload;\nif (Buffer.isBuffer(payload)) {\n    try { payload = JSON.parse(payload.toString('utf8')); } catch (e) { payload = { raw: payload.toString('utf8') }; }\n}\nconst topicBase = (msg._cmd_topic || '').replace(/\\/cmd$/, '');\nif (!topicBase) return null;\nmsg.topic = `${topicBase}/response`;\nmsg.qos = 1;\nmsg.retain = false;\nmsg.payload = { status: 'ok', from: 'coap-ack', data: payload };\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "libs": []
+  },
+  {
+    "id": "f01-coap-put",
+    "type": "coap request",
+    "z": "floor-gateway-tab",
+    "name": "CoAP PUT CON",
+    "x": 700,
+    "y": 520,
+    "wires": [
+      [
+        "f01-func-ack2resp"
+      ]
+    ],
+    "method": "PUT",
+    "observe": false,
+    "name_payload": true,
+    "usetls": false,
+    "content-format": "application/json",
+    "url": ""
+  },
+  {
+    "id": "f01-func-cmd2coap",
+    "type": "function",
+    "z": "floor-gateway-tab",
+    "name": "cmd->CoAP PUT f01",
+    "x": 500,
+    "y": 520,
+    "wires": [
+      [
+        "f01-coap-put"
+      ]
+    ],
+    "func": "// Translate MQTT command (campus/b01/fNN/rXXX/cmd) into a CoAP PUT\n// (Confirmable) request aimed at the virtual node's /actuators/hvac\n// resource. Emits the CoAP request message for the coap-request node.\nconst PORT_MAP = {\n    111: 5684,\n    112: 5685,\n    113: 5686,\n    114: 5687,\n    115: 5688,\n    116: 5689,\n    117: 5690,\n    118: 5691,\n    119: 5692,\n    120: 5693,\n};\nconst m = (msg.topic || '').match(/^campus\\/b01\\/f(\\d{2})\\/r(\\d+)\\/cmd$/);\nif (!m) { return null; }\nconst floorStr = '01';\nconst roomCode = parseInt(m[2], 10);\nconst port = PORT_MAP[roomCode];\nif (!port) {\n    node.warn(`cmd for unknown CoAP room ${roomCode}`);\n    return null;\n}\nconst engineHost = global.get('engineHost') || 'engine';\nmsg.method = 'PUT';\nmsg.observe = false;\nmsg.options = { 'Content-Format': 'application/json' };\nmsg.url = `coap://${engineHost}:${port}/f${floorStr}/r${roomCode}/actuators/hvac`;\nmsg._cmd_topic = msg.topic;\nmsg._room_code = roomCode;\nmsg._floor = floorStr;\n// Keep payload as JSON object; coap-request serialises\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "libs": []
+  },
+  {
+    "id": "f01-func-dup",
+    "type": "function",
+    "z": "floor-gateway-tab",
+    "name": "DUP filter",
+    "x": 340,
+    "y": 520,
+    "wires": [
+      [
+        "f01-func-cmd2coap"
+      ]
+    ],
+    "func": "// Drop MQTT commands whose DUP flag is set AND that we've already\n// processed within the last 60 seconds. Uses a per-flow LRU map\n// keyed by (topic, command_id).\nconst CACHE_KEY = 'dupCache';\nconst cache = flow.get(CACHE_KEY) || {};\nconst now = Date.now();\nconst ttl = 60 * 1000;\n// Evict expired\nfor (const k of Object.keys(cache)) {\n    if (cache[k] < now - ttl) delete cache[k];\n}\nconst payload = (typeof msg.payload === 'string') ? (function () { try { return JSON.parse(msg.payload); } catch (e) { return null; } })() : msg.payload;\nif (!payload || typeof payload !== 'object') { return null; }\nconst cmdId = payload.command_id || `${msg.topic}:${msg._msgid}`;\nconst dupFlag = !!(msg.dup || (msg.fixed && msg.fixed.dup));\nconst key = `${msg.topic}|${cmdId}`;\nif (cache[key] && dupFlag) {\n    node.warn(`DUP drop key=${key}`);\n    return null;\n}\ncache[key] = now;\nflow.set(CACHE_KEY, cache);\nmsg.payload = payload;\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "libs": []
+  },
+  {
+    "id": "f01-mqtt-cmd-in",
+    "type": "mqtt in",
+    "z": "floor-gateway-tab",
+    "name": "cmd-in-f01",
+    "x": 150,
+    "y": 520,
+    "wires": [
+      [
+        "f01-func-dup"
+      ]
+    ],
+    "topic": "campus/b01/f01/+/cmd",
+    "qos": "2",
+    "datatype": "auto-detect",
+    "broker": "hivemq-broker-config",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0
+  },
+  {
+    "id": "f01-mqtt-summary-out",
+    "type": "mqtt out",
+    "z": "floor-gateway-tab",
+    "name": "summary-out-f01",
+    "x": 900,
+    "y": 700,
+    "wires": [],
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "hivemq-broker-config"
+  },
+  {
+    "id": "f01-func-thinning",
+    "type": "function",
+    "z": "floor-gateway-tab",
+    "name": "Edge thinning (60s)",
+    "x": 600,
+    "y": 700,
+    "wires": [
+      [
+        "f01-mqtt-summary-out"
+      ]
+    ],
+    "func": "// Compute and publish a 60-second floor-level state summary to\n// reduce network congestion (campus/b01/fNN/summary).  Also\n// powers ThingsBoard's Floor Health card.\nconst bucket = flow.get('thinBucket') || {temp: [], hum: [], n: 0};\nfunction avg(xs) { return xs.length ? xs.reduce((a,b)=>a+b,0) / xs.length : null; }\nconst summary = {\n    floor: 'f01',\n    window_sec: 60,\n    samples: bucket.n,\n    avg_temperature: avg(bucket.temp),\n    avg_humidity: avg(bucket.hum),\n    timestamp: Math.floor(Date.now() / 1000)\n};\nflow.set('thinBucket', {temp: [], hum: [], n: 0});\nmsg.topic = 'campus/b01/f01/summary';\nmsg.qos = 1;\nmsg.retain = true;\nmsg.payload = summary;\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "libs": []
+  },
+  {
+    "id": "f01-inject-tick",
+    "type": "inject",
+    "z": "floor-gateway-tab",
+    "name": "every-60s",
+    "x": 250,
+    "y": 700,
+    "wires": [
+      [
+        "f01-func-thinning"
+      ]
+    ],
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "60",
+    "crontab": "",
+    "once": false,
+    "onceDelay": "60",
+    "topic": "tick",
+    "payload": "",
+    "payloadType": "date"
+  },
+  {
+    "id": "f01-status",
+    "type": "status",
+    "z": "floor-gateway-tab",
+    "name": "Cloud status watchdog",
+    "x": 250,
+    "y": 820,
+    "wires": [
+      []
+    ],
+    "scope": [
+      "hivemq-broker-config"
+    ]
+  },
+  {
+    "id": "f01-mqtt-autonomy-out",
+    "type": "mqtt out",
+    "z": "floor-gateway-tab",
+    "name": "autonomy-out-f01",
+    "x": 900,
+    "y": 820,
+    "wires": [],
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "hivemq-broker-config"
+  },
+  {
+    "id": "f01-func-autonomy",
+    "type": "function",
+    "z": "floor-gateway-tab",
+    "name": "Offline autonomy",
+    "x": 600,
+    "y": 820,
+    "wires": [
+      [
+        "f01-mqtt-autonomy-out"
+      ]
+    ],
+    "func": "// Local autonomy: if a room reports occupancy=false AND the cloud\n// connection is degraded, emit a lights-off MQTT cmd locally so\n// the gateway keeps controlling actuators even when offline.\nconst payload = msg.payload || {};\nif (typeof payload !== 'object') return null;\nconst cloudOk = (flow.get('cloudOk') !== false);\nif (payload.occupancy === false && payload.lighting_dimmer > 10 && !cloudOk) {\n    const sid = payload.sensor_id || '';\n    const m = sid.match(/^b(\\d{2})-f(\\d{2})-r(\\d+)$/);\n    if (!m) return null;\n    const local = { topic: `campus/b01/f${m[2]}/r${m[3]}/cmd`, qos: 2, payload: {lighting_dimmer: 0, command_id: `autonomy-${sid}-${Date.now()}`} };\n    return local;\n}\nreturn null;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "libs": []
+  }
+]

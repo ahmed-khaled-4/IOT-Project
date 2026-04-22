@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<!--
+  HiveMQ CE configuration for the Phase 2 IoT campus backbone.
+  - Plain MQTT on 1883 (internal campus traffic only)
+  - TLS MQTT on 8883 (production node connections with client certs)
+  - Websocket on 8000
+  - Control Center on 8080
+
+  ACLs / credential files referenced by this config live next door in
+  credentials.xml and are enforced by the built-in "file" authenticator.
+-->
+<hivemq xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <listeners>
+        <tcp-listener>
+            <port>1883</port>
+            <bind-address>0.0.0.0</bind-address>
+            <name>campus-plain</name>
+        </tcp-listener>
+
+        <tls-tcp-listener>
+            <port>8883</port>
+            <bind-address>0.0.0.0</bind-address>
+            <name>campus-tls</name>
+            <tls>
+                <keystore>
+                    <path>/opt/hivemq/certs/hivemq-keystore.jks</path>
+                    <password>changeit</password>
+                    <private-key-password>changeit</private-key-password>
+                </keystore>
+                <truststore>
+                    <path>/opt/hivemq/certs/hivemq-truststore.jks</path>
+                    <password>changeit</password>
+                </truststore>
+                <client-authentication-mode>OPTIONAL</client-authentication-mode>
+                <protocols>
+                    <protocol>TLSv1.2</protocol>
+                    <protocol>TLSv1.3</protocol>
+                </protocols>
+            </tls>
+        </tls-tcp-listener>
+
+        <websocket-listener>
+            <port>8000</port>
+            <bind-address>0.0.0.0</bind-address>
+            <path>/mqtt</path>
+            <name>campus-ws</name>
+            <subprotocols>
+                <subprotocol>mqttv3.1</subprotocol>
+                <subprotocol>mqtt</subprotocol>
+            </subprotocols>
+        </websocket-listener>
+    </listeners>
+
+    <anonymous-usage-statistics>
+        <enabled>false</enabled>
+    </anonymous-usage-statistics>
+
+    <mqtt>
+        <queued-messages>
+            <max-queue-size>10000</max-queue-size>
+        </queued-messages>
+
+        <message-expiry>
+            <max-interval>4294967296</max-interval>
+        </message-expiry>
+
+        <session-expiry>
+            <max-interval>4294967295</max-interval>
+        </session-expiry>
+
+        <keep-alive>
+            <max-keep-alive>65535</max-keep-alive>
+            <allow-unlimited>true</allow-unlimited>
+        </keep-alive>
+
+        <quality-of-service>
+            <max-qos>2</max-qos>
+        </quality-of-service>
+    </mqtt>
+
+    <restrictions>
+        <max-connections>500</max-connections>
+        <max-client-id-length>65535</max-client-id-length>
+        <max-topic-alias>15</max-topic-alias>
+        <no-connect-idle-timeout>10000</no-connect-idle-timeout>
+        <incoming-bandwidth-throttling>0</incoming-bandwidth-throttling>
+    </restrictions>
+
+    <control-center>
+        <listeners>
+            <http>
+                <port>8080</port>
+                <bind-address>0.0.0.0</bind-address>
+            </http>
+        </listeners>
+        <users>
+            <user>
+                <name>admin</name>
+                <password>hivemqadmin</password>
+            </user>
+        </users>
+    </control-center>
+
+</hivemq>

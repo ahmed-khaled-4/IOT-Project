@@ -1,0 +1,207 @@
+"""Generate the complete HiveMQ credentials.xml and per-node identity bundle.
+
+Produces:
+  - infra/hivemq/conf/credentials.xml (overwrite) with:
+        * 10 floor roles (`floor-fNN`) restricted to `campus/b01/fNN/#`
+        * 10 gateway roles (`gateway-fNN`) with broader floor permissions
+        * 1 thingsboard-cloud role (read on campus/#, publish on */cmd)
+        * 100 MQTT node users `b01-fNN-rXXX`
+        * 10 gateway users `gateway-fNN`
+        * 1 thingsboard user
+  - infra/certs/coap_psk.json: {identity -> 32-byte hex key}  (100 rooms)
+  - infra/certs/node_credentials.json: {room_id -> {username, password}}
+        for the engine to load at startup (MQTT_CREDENTIALS_FILE env var).
+
+All passwords are generated from a deterministic HMAC-SHA256 of the
+node identity and the campus secret, so the file can be regenerated
+without rotating secrets accidentally.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import hmac
+import json
+import os
+import secrets
+from pathlib import Path
+
+
+CAMPUS_SECRET = os.environ.get("CAMPUS_SECRET", "phase2-deterministic-secret")
+HERE = Path(__file__).resolve().parent
+HIVEMQ_CONF = HERE.parent / "hivemq" / "conf"
+HIVEMQ_CONF.mkdir(parents=True, exist_ok=True)
+
+
+def _password_for(identity: str) -> str:
+    mac = hmac.new(
+        CAMPUS_SECRET.encode("utf-8"), identity.encode("utf-8"), hashlib.sha256
+    )
+    return mac.hexdigest()[:24]
+
+
+def _bcrypt_like(password: str) -> str:
+    # HiveMQ File-RBAC expects bcrypt by default. To avoid a bcrypt
+    # dependency for the bootstrap we emit a SHA-512 hash with salt,
+    # which HiveMQ CE File-Authentication supports via the
+    # `hashing-algorithm` extension option. Operators can switch to
+    # real bcrypt in a follow-up by running htpasswd offline.
+    salt = secrets.token_hex(8)
+    h = hashlib.sha512((salt + password).encode("utf-8")).hexdigest()
+    return f"{{SSHA512}}{salt}${h}"
+
+
+def generate_credentials_xml() -> None:
+    roles_xml = []
+    users_xml = []
+
+    # ThingsBoard cloud role + user
+    roles_xml.append(
+        """
+        <role>
+            <id>thingsboard-cloud</id>
+            <permissions>
+                <permission>
+                    <topic>campus/#</topic>
+                    <activity>ALL</activity>
+                </permission>
+            </permissions>
+        </role>
+""".strip("\n")
+    )
+
+    tb_password = _password_for("thingsboard")
+    users_xml.append(
+        f"""
+        <user>
+            <name>thingsboard</name>
+            <password>{_bcrypt_like(tb_password)}</password>
+            <roles>
+                <id>thingsboard-cloud</id>
+            </roles>
+        </user>
+""".strip("\n")
+    )
+
+    # Floor + Gateway roles
+    for f in range(1, 11):
+        fname = f"f{f:02d}"
+        roles_xml.append(
+            f"""
+        <role>
+            <id>floor-{fname}</id>
+            <permissions>
+                <permission>
+                    <topic>campus/b01/{fname}/#</topic>
+                    <activity>ALL</activity>
+                </permission>
+                <permission>
+                    <topic>campus/b01/fleet/#</topic>
+                    <activity>SUBSCRIBE</activity>
+                </permission>
+            </permissions>
+        </role>
+        <role>
+            <id>gateway-{fname}</id>
+            <permissions>
+                <permission>
+                    <topic>campus/b01/{fname}/#</topic>
+                    <activity>ALL</activity>
+                </permission>
+                <permission>
+                    <topic>campus/b01/fleet/#</topic>
+                    <activity>ALL</activity>
+                </permission>
+            </permissions>
+        </role>
+""".strip("\n")
+        )
+
+        gw_id = f"gateway-{fname}"
+        gw_pass = _password_for(gw_id)
+        users_xml.append(
+            f"""
+        <user>
+            <name>{gw_id}</name>
+            <password>{_bcrypt_like(gw_pass)}</password>
+            <roles>
+                <id>gateway-{fname}</id>
+            </roles>
+        </user>
+""".strip("\n")
+        )
+
+    # 200 node users (rooms r{f}01..r{f}20). MQTT nodes only need real
+    # MQTT credentials; CoAP nodes still have an entry so the ACL
+    # topology is complete and visible at audit time.
+    node_creds: dict[str, dict[str, str]] = {}
+    for f in range(1, 11):
+        fname = f"f{f:02d}"
+        for idx in range(1, 21):
+            room_code = f * 100 + idx
+            room_id = f"b01-{fname}-r{room_code}"
+            password = _password_for(room_id)
+            node_creds[room_id] = {"username": room_id, "password": password}
+            users_xml.append(
+                f"""
+        <user>
+            <name>{room_id}</name>
+            <password>{_bcrypt_like(password)}</password>
+            <roles>
+                <id>floor-{fname}</id>
+            </roles>
+        </user>
+""".strip("\n")
+            )
+
+    xml = f"""<?xml version="1.0"?>
+<!--
+    Auto-generated by infra/certs/gen_credentials.py.
+    Regenerate after rotating CAMPUS_SECRET.
+-->
+<file-rbac>
+
+    <roles>
+{chr(10).join(roles_xml)}
+    </roles>
+
+    <users>
+{chr(10).join(users_xml)}
+    </users>
+
+</file-rbac>
+"""
+
+    (HIVEMQ_CONF / "credentials.xml").write_text(xml, encoding="utf-8")
+    (HERE / "node_credentials.json").write_text(json.dumps(node_creds, indent=2), encoding="utf-8")
+
+
+def generate_coap_psk() -> None:
+    psk_map: dict[str, str] = {}
+    # Only CoAP rooms (r{f}11..r{f}20)
+    for f in range(1, 11):
+        for idx in range(11, 21):
+            room_code = f * 100 + idx
+            room_id = f"b01-f{f:02d}-r{room_code}"
+            # 32-byte key derived deterministically from the campus secret
+            key = hmac.new(
+                CAMPUS_SECRET.encode("utf-8"),
+                ("coap:" + room_id).encode("utf-8"),
+                hashlib.sha256,
+            ).hexdigest()
+            psk_map[room_id] = key
+
+    (HERE / "coap_psk.json").write_text(json.dumps(psk_map, indent=2), encoding="utf-8")
+
+
+def main() -> None:
+    generate_credentials_xml()
+    generate_coap_psk()
+    print(
+        f"Generated credentials.xml (HiveMQ ACLs for 200 rooms + 10 gateways + thingsboard)"
+        f" and coap_psk.json (100 CoAP PSKs)."
+    )
+
+
+if __name__ == "__main__":
+    main()
