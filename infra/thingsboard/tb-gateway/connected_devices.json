@@ -59,66 +59,6 @@
     "deviceType": "MQTT-ThermalSensor",
     "renaming": null
   },
-  "b01-f01-r111": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f01-r112": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f01-r113": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f01-r114": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f01-r115": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f01-r116": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f01-r117": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f01-r118": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f01-r119": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f01-r120": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
   "b01-f02-r201": {
     "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
     "connectorName": "HiveMQ Campus",
@@ -177,66 +117,6 @@
     "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
     "connectorName": "HiveMQ Campus",
     "deviceType": "MQTT-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f02-r211": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f02-r212": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f02-r213": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f02-r214": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f02-r215": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f02-r216": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f02-r217": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f02-r218": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f02-r219": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f02-r220": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
     "renaming": null
   },
   "b01-f03-r301": {
@@ -299,66 +179,6 @@
     "deviceType": "MQTT-ThermalSensor",
     "renaming": null
   },
-  "b01-f03-r311": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f03-r312": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f03-r313": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f03-r314": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f03-r315": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f03-r316": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f03-r317": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f03-r318": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f03-r319": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f03-r320": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
   "b01-f04-r401": {
     "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
     "connectorName": "HiveMQ Campus",
@@ -414,72 +234,6 @@
     "renaming": null
   },
   "b01-f04-r410": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "MQTT-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f04-r411": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f04-r412": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f04-r413": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f04-r414": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f04-r415": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f04-r416": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f04-r417": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f04-r418": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f04-r419": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f04-r420": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f05-r102": {
     "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
     "connectorName": "HiveMQ Campus",
     "deviceType": "MQTT-ThermalSensor",
@@ -545,66 +299,6 @@
     "deviceType": "MQTT-ThermalSensor",
     "renaming": null
   },
-  "b01-f05-r511": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f05-r512": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f05-r513": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f05-r514": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f05-r515": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f05-r516": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f05-r517": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f05-r518": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f05-r519": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f05-r520": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
   "b01-f06-r601": {
     "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
     "connectorName": "HiveMQ Campus",
@@ -663,66 +357,6 @@
     "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
     "connectorName": "HiveMQ Campus",
     "deviceType": "MQTT-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f06-r611": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f06-r612": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f06-r613": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f06-r614": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f06-r615": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f06-r616": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f06-r617": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f06-r618": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f06-r619": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f06-r620": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
     "renaming": null
   },
   "b01-f07-r701": {
@@ -785,66 +419,6 @@
     "deviceType": "MQTT-ThermalSensor",
     "renaming": null
   },
-  "b01-f07-r711": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f07-r712": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f07-r713": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f07-r714": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f07-r715": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f07-r716": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f07-r717": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f07-r718": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f07-r719": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f07-r720": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
   "b01-f08-r801": {
     "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
     "connectorName": "HiveMQ Campus",
@@ -903,66 +477,6 @@
     "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
     "connectorName": "HiveMQ Campus",
     "deviceType": "MQTT-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f08-r811": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f08-r812": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f08-r813": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f08-r814": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f08-r815": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f08-r816": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f08-r817": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f08-r818": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f08-r819": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f08-r820": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
     "renaming": null
   },
   "b01-f09-r901": {
@@ -1025,66 +539,6 @@
     "deviceType": "MQTT-ThermalSensor",
     "renaming": null
   },
-  "b01-f09-r911": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f09-r912": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f09-r913": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f09-r914": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f09-r915": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f09-r916": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f09-r917": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f09-r918": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f09-r919": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f09-r920": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
   "b01-f10-r1001": {
     "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
     "connectorName": "HiveMQ Campus",
@@ -1143,66 +597,6 @@
     "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
     "connectorName": "HiveMQ Campus",
     "deviceType": "MQTT-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f10-r1011": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f10-r1012": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f10-r1013": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f10-r1014": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f10-r1015": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f10-r1016": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f10-r1017": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f10-r1018": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f10-r1019": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
-    "renaming": null
-  },
-  "b01-f10-r1020": {
-    "connectorId": "7448f658-e7f1-4427-a94a-6ca6338c40cf",
-    "connectorName": "HiveMQ Campus",
-    "deviceType": "CoAP-ThermalSensor",
     "renaming": null
   }
 }
