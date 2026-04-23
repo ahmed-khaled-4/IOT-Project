@@ -200,6 +200,23 @@ python infra\thingsboard\bootstrap.py `
     --password tenant
 ```
 
+**Device “Active” in the ThingsBoard UI** requires recent **activity** (telemetry
+or attributes). Bootstrap sets a **long** per-device server attribute
+`inactivityTimeout` (default **30 days**) so brief gaps do not flip rooms to
+**Inactive**. To mark **all 200 room devices active immediately** (one sample
+each, before the engine catches up), re-run:
+
+```powershell
+python infra\thingsboard\bootstrap.py `
+    --url http://localhost:9090 `
+    --user tenant@thingsboard.org `
+    --password tenant `
+    --touch-telemetry
+```
+
+(`--device-inactivity-timeout-ms 0` skips the timeout attribute; a large value
+keeps the UI stable once the stack is running.)
+
 Expected tail (includes one line per thermal profile after profiles are created):
 
 ```
@@ -391,7 +408,10 @@ raw JSON for every bundle alias.
 2. Drag `infra/thingsboard/dashboard-noc.json`.
 3. When prompted, accept the single **All Rooms** entity alias
    (resolves by device type).
-4. Open the dashboard, drag the timewindow to **Real-time, 1 minute**.
+4. Open the dashboard; the seed uses **Real-time, 5 minutes** so the fleet
+   chart has enough points. The **Alarms** widget does **not** use the
+   dashboard time window (so **active** alarms stay visible instead of
+   disappearing when the chart window is only the last minute).
    The seed **All Rooms** alias matches device **names starting with `b01-`**
    (campus rooms only). If you imported an older `dashboard-noc.json` that
    resolved **every** device in the tenant, the fleet chart will look empty
@@ -399,9 +419,12 @@ raw JSON for every bundle alias.
    `b01-` under **Entity aliases**.
 5. Expect within 30 s:
    - **Fleet Temperature (All Rooms)** draws at least one line per
-     telemetry-producing device.
-   - **Active Alarms** is empty until a HighTemp / DeviceOffline alarm
-     is raised by the rule chain.
+     telemetry-producing device (200 lines may take a short time to load).
+   - **Active Alarms** lists **HighTemp** (temperature **> 30 °C** only;
+     humidity is not part of that rule) and other types for **b01-** devices.
+     If you still see an empty table after a confirmed alarm, edit the widget,
+     open **Advanced**, and ensure **Use dashboard timewindow** is **off** for
+     alarms, then **Save**.
 
 ### 5.5 Set the shared `highTempThreshold` attribute
 

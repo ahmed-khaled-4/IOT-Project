@@ -1,4 +1,5 @@
 gmqtt>=0.6.16
+paho-mqtt>=2.0.0
 aiocoap[all]>=0.4.7
 pyyaml>=6.0
 aiosqlite>=0.19
