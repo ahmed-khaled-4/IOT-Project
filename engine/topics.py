@@ -43,8 +43,44 @@ class TopicScheme:
     def room_command_subscription(self) -> str:
         return f"{self.prefix}/+/+/cmd"
 
+    # --- Phase 3: OTA topics ---
 
-_ROOM_TOPIC_RE = re.compile(r"^.*/f(\d{2})/r(\d+)/([a-zA-Z0-9_]+)$")
+    def ota_broadcast(self) -> str:
+        return f"{self.prefix}/ota/config"
+
+    def ota_floor(self, floor_id: int) -> str:
+        return f"{self.prefix}/f{floor_id:02d}/ota"
+
+    def ota_room(self, floor_id: int, room_code: int) -> str:
+        return f"{self.prefix}/f{floor_id:02d}/r{room_code}/ota"
+
+    def ota_subscription_floor(self) -> str:
+        """Wildcard subscription for floor-targeted OTA messages."""
+        return f"{self.prefix}/+/ota"
+
+    def ota_subscription_room(self) -> str:
+        """Wildcard subscription for room-targeted OTA messages."""
+        return f"{self.prefix}/+/+/ota"
+
+    def ota_alerts(self) -> str:
+        return f"{self.prefix}/ota/alerts"
+
+    # --- Phase 3: Shadow state / client attribute topics ---
+
+    def client_attributes(self, floor_id: int, room_code: int) -> str:
+        """Engine publishes reported state + current_version here for tb-gateway to forward as client attributes."""
+        return f"{self.prefix}/f{floor_id:02d}/r{room_code}/attributes"
+
+    def attr_update(self, floor_id: int, room_code: int) -> str:
+        """tb-gateway publishes desired shared attributes to this topic for the engine to consume."""
+        return f"{self.prefix}/f{floor_id:02d}/r{room_code}/attr-update"
+
+    def attr_update_subscription(self) -> str:
+        """Wildcard subscription to receive all attr-update messages."""
+        return f"{self.prefix}/+/+/attr-update"
+
+
+_ROOM_TOPIC_RE = re.compile(r"^.*/f(\d{2})/r(\d+)/([a-zA-Z0-9_-]+)$")
 
 
 def parse_room_topic(topic: str) -> Optional[tuple[int, int, str]]:

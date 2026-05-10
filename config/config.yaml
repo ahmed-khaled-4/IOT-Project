@@ -109,3 +109,21 @@ logging:
 
 database:
   sqlite_path: ./data/world.db
+
+# Phase 3: OTA (Over-the-Air) update configuration
+ota:
+  # Starting firmware version assigned to all rooms on engine startup
+  current_version: "1.0"
+  # Topic structure (handled by TopicScheme; documented here for reference)
+  # broadcast: campus/b01/ota/config
+  # floor:     campus/b01/f{f}/ota
+  # room:      campus/b01/f{f}/r{r}/ota
+  # alerts:    campus/b01/ota/alerts
+
+# Phase 3: Shadow state synchronization configuration
+shadow:
+  # Shared attribute key names (must match infra/thingsboard/tb-gateway/mqtt.json attributeUpdates section)
+  desired_hvac_key: "desired_hvac_mode"
+  desired_dimmer_key: "desired_lighting_dimmer"
+  # Client attribute topic suffix: campus/b01/f{f}/r{r}/attributes
+  # Desired state topic suffix:    campus/b01/f{f}/r{r}/attr-update

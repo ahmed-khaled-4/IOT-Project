@@ -4,7 +4,7 @@ import asyncio
 import json
 import ssl
 import time
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional
 
 from gmqtt import Client as MQTTClient
 from gmqtt import Message as MQTTMessage
@@ -15,6 +15,10 @@ from ..room import Room
 from ..topics import TopicScheme, parse_room_topic, make_room_id
 from .base import CommandHandler, RoomTransport, TransportKind
 from .dup_filter import DupFilter, build_mqtt_key
+
+if TYPE_CHECKING:
+    from ..ota import OTAManager
+    from ..shadow import ShadowManager
 
 
 ROOM_COMMAND_SCHEMA = {
@@ -55,6 +59,7 @@ class _RoomMQTTConn:
         dup_filter: DupFilter,
         on_command: CommandHandler,
         log_fn,
+        shadow_manager: Optional["ShadowManager"] = None,
     ):
         self._room = room
         self._building_id = int(building_id)
@@ -71,6 +76,7 @@ class _RoomMQTTConn:
         self._username = username
         self._password = password
         self._connected = False
+        self._shadow = shadow_manager
 
         client_id = make_room_id(building_id, room.floor_id, room.room_code)
         lwt_topic = topics.status(room.floor_id, room.room_code)
@@ -167,10 +173,19 @@ class _RoomMQTTConn:
         topic = self._topics.status(self._room.floor_id, self._room.room_code)
         self._client.publish(topic, json.dumps(payload), qos=1, retain=True)
 
+    def publish_client_attributes(self) -> None:
+        """Phase 3: publish reported state + current_version as client attributes via tb-gateway."""
+        topic = self._topics.client_attributes(self._room.floor_id, self._room.room_code)
+        payload = self._room.to_client_attributes_json()
+        self._client.publish(topic, json.dumps(payload), qos=1)
+
     def _handle_connect(self, client, flags, rc, properties) -> None:
         self._connected = True
         cmd_topic = self._topics.command(self._room.floor_id, self._room.room_code)
         client.subscribe(cmd_topic, qos=self._qos_c)
+        # Phase 3: subscribe to desired-state updates pushed by tb-gateway
+        attr_update_topic = self._topics.attr_update(self._room.floor_id, self._room.room_code)
+        client.subscribe(attr_update_topic, qos=1)
         online = {
             "sensor_id": self.client_id,
             "state": "online",
@@ -198,6 +213,16 @@ class _RoomMQTTConn:
             data = json.loads(payload_str)
         except Exception as e:
             self._log(f"mqtt.command.invalid_json topic={topic_str} err={type(e).__name__}:{e}")
+            return
+
+        # Phase 3: route attr-update messages to shadow manager
+        if topic_str.endswith("/attr-update"):
+            if self._shadow is not None and isinstance(data, dict):
+                parsed = parse_room_topic(topic_str)
+                if parsed is not None:
+                    floor_id, room_code, _ = parsed
+                    room_id = make_room_id(self._building_id, floor_id, room_code)
+                    self._shadow.on_desired_received(room_id, data)
             return
 
         # Dedup using packet id when available, payload hash otherwise
@@ -256,6 +281,8 @@ class MQTTTransport(RoomTransport):
         credentials: Optional[Dict[str, tuple[str, str]]] = None,
         dup_filter: Optional[DupFilter] = None,
         log_fn: Callable[[str], None] = print,
+        ota_manager: Optional["OTAManager"] = None,
+        shadow_manager: Optional["ShadowManager"] = None,
     ):
         self._rooms = list(rooms)
         self._building_id = int(building_id)
@@ -269,10 +296,12 @@ class MQTTTransport(RoomTransport):
         self._dup_filter = dup_filter or DupFilter()
         self._log = log_fn
         self._validator = Draft7Validator(ROOM_COMMAND_SCHEMA)
+        self._ota = ota_manager
+        self._shadow = shadow_manager
 
         self._handler: Optional[CommandHandler] = None
         self._conns: Dict[str, _RoomMQTTConn] = {}
-        self._fleet_client: Optional[MQTTClient] = None  # for fleet.health + fleet.cmd
+        self._fleet_client: Optional[MQTTClient] = None  # for fleet.health + fleet.cmd + OTA
 
     @property
     def connected(self) -> bool:
@@ -309,6 +338,7 @@ class MQTTTransport(RoomTransport):
                 dup_filter=self._dup_filter,
                 on_command=handler,
                 log_fn=self._log,
+                shadow_manager=self._shadow,
             )
             self._conns[room_id] = conn
 
@@ -319,16 +349,24 @@ class MQTTTransport(RoomTransport):
             except Exception as e:
                 self._log(f"mqtt.node.connect_failed err={type(e).__name__}:{e}")
 
-        # Also open a fleet-scope client for fleet.health publications and
-        # fleet.cmd subscription.
+        # Also open a fleet-scope client for fleet.health publications,
+        # fleet.cmd subscription, and Phase 3 OTA subscriptions.
         self._fleet_client = MQTTClient(client_id="world-engine-fleet")
         user, pw = self._credentials.get("fleet", (None, None))
         if user:
             self._fleet_client.set_auth_credentials(user, pw or "")
 
         def _on_fleet_msg(client, topic, payload, qos, properties):
+            topic_str = str(topic)
+            raw = payload if isinstance(payload, (bytes, bytearray)) else payload.encode("utf-8")
+
+            # Phase 3: route OTA messages to OTAManager
+            if "/ota" in topic_str and self._ota is not None:
+                self._ota.process_message(topic_str, raw)
+                return
+
             try:
-                data = json.loads(payload.decode("utf-8") if isinstance(payload, (bytes, bytearray)) else str(payload))
+                data = json.loads(raw.decode("utf-8"))
             except Exception:
                 return
             errors = sorted(self._validator.iter_errors(data), key=lambda e: e.path)
@@ -341,6 +379,12 @@ class MQTTTransport(RoomTransport):
 
         def _on_fleet_connect(client, flags, rc, properties):
             client.subscribe(self._topics.fleet_command(), qos=self._qos_c)
+            # Phase 3: OTA subscriptions (broadcast, floor-targeted, room-targeted)
+            if self._ota is not None:
+                client.subscribe(self._topics.ota_broadcast(), qos=1)
+                client.subscribe(self._topics.ota_subscription_floor(), qos=1)
+                client.subscribe(self._topics.ota_subscription_room(), qos=1)
+                self._log("mqtt.fleet.ota_subscribed broadcast+floor+room")
             self._log(f"mqtt.fleet.connected rc={rc}")
 
         self._fleet_client.on_connect = _on_fleet_connect
@@ -406,3 +450,17 @@ class MQTTTransport(RoomTransport):
         if self._fleet_client is None:
             return
         self._fleet_client.publish(self._topics.fleet_health(), json.dumps(payload), qos=1)
+
+    def publish_client_attributes(self, room: Any) -> None:
+        """Phase 3: publish reported state + current_version as TB client attributes."""
+        c = self._get_conn(room)
+        if c is not None:
+            c.publish_client_attributes()
+
+    def publish_ota_alert(self, payload: Dict[str, Any]) -> None:
+        """Phase 3: publish a security tampering alert to the OTA alerts topic."""
+        if self._fleet_client is None:
+            return
+        self._fleet_client.publish(
+            self._topics.ota_alerts(), json.dumps(payload), qos=1
+        )

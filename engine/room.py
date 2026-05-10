@@ -37,6 +37,9 @@ class Room:
     _frozen_until: Optional[int] = field(default=None, repr=False)
     _last_heartbeat_published: int = field(default=0, repr=False)
 
+    # Phase 3: OTA firmware version — not persisted in SQLite, reset to "1.0" on restart
+    current_version: str = field(default="1.0", repr=False)
+
     @staticmethod
     def make_room_id(building_id: int, floor_id: int, room_code: int) -> str:
         return f"b{building_id:02d}-f{floor_id:02d}-r{room_code}"
@@ -114,6 +117,18 @@ class Room:
             "light_level": int(self.light_level),
             "hvac_mode": str(self.hvac_mode),
             "lighting_dimmer": int(self.lighting_dimmer),
+            # Phase 3: firmware version for fleet evolution dashboard
+            "current_version": str(self.current_version),
+        }
+
+    def to_client_attributes_json(self) -> Dict[str, Any]:
+        """Phase 3: reported state published to TB client attributes via tb-gateway."""
+        return {
+            "sensor_id": self.room_id,
+            "tb_profile": self.thingsboard_device_profile(),
+            "reported_hvac_mode": str(self.hvac_mode),
+            "reported_lighting_dimmer": int(self.lighting_dimmer),
+            "current_version": str(self.current_version),
         }
 
     @classmethod

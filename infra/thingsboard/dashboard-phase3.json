@@ -1,0 +1,320 @@
+{
+  "title": "Phase 3 - Digital Twin Dashboard",
+  "name": "Phase 3 - Digital Twin Dashboard",
+  "image": null,
+  "mobileHide": false,
+  "mobileOrder": null,
+  "configuration": {
+    "description": "Phase 3: Shadow Sync Status, Fleet OTA Evolution, and Floor Plan Heatmap.",
+    "widgets": {
+      "aa000001-0001-4000-8000-000000000001": {
+        "id": "aa000001-0001-4000-8000-000000000001",
+        "type": "latest",
+        "sizeX": 24,
+        "sizeY": 12,
+        "row": 0,
+        "col": 0,
+        "config": {
+          "datasources": [
+            {
+              "type": "entity",
+              "name": "All Room Devices",
+              "entityAliasId": "alias-all-rooms",
+              "filterId": null,
+              "dataKeys": [
+                { "name": "desired_hvac_mode",      "type": "attribute",  "label": "Desired HVAC",    "color": "#2196f3", "settings": {}, "_hash": 0.101 },
+                { "name": "reported_hvac_mode",      "type": "attribute",  "label": "Reported HVAC",   "color": "#4caf50", "settings": {}, "_hash": 0.102 },
+                { "name": "desired_lighting_dimmer", "type": "attribute",  "label": "Desired Dimmer",  "color": "#ff9800", "settings": {}, "_hash": 0.103 },
+                { "name": "reported_lighting_dimmer","type": "attribute",  "label": "Reported Dimmer", "color": "#9c27b0", "settings": {}, "_hash": 0.104 },
+                { "name": "current_version",         "type": "attribute",  "label": "Version",         "color": "#607d8b", "settings": {}, "_hash": 0.105 }
+              ]
+            }
+          ],
+          "showTitle": true,
+          "backgroundColor": "#fff",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "enableSearch": true,
+            "enableSelectColumnDisplay": true,
+            "enableStickyHeader": true,
+            "enableStickyAction": true,
+            "reserveSpaceForHiddenAction": true,
+            "displayEntityName": true,
+            "entityNameColumnTitle": "Device Name",
+            "displayEntityLabel": false,
+            "displayPagination": true,
+            "defaultPageSize": 20,
+            "defaultSortOrder": "entityName",
+            "useRowStyleFunction": true,
+            "rowStyleFunction": "var dH = entity['desired_hvac_mode']; var rH = entity['reported_hvac_mode']; var dD = entity['desired_lighting_dimmer']; var rD = entity['reported_lighting_dimmer']; if (dH && rH && dH !== rH) return {'background-color':'#fff3e0','color':'#e65100','font-weight':'bold'}; if (dD && rD && dD !== rD) return {'background-color':'#fff3e0','color':'#e65100','font-weight':'bold'}; return {};"
+          },
+          "title": "Shadow Sync Status - All 200 Devices",
+          "dropShadow": true,
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "showTitleIcon": false,
+          "titleTooltip": "Highlights rows where Desired state differs from Reported state (orange = out of sync)",
+          "useDashboardTimewindow": true
+        },
+        "typeFullFqn": "system.cards.entities_table"
+      },
+      "aa000001-0001-4000-8000-000000000002": {
+        "id": "aa000001-0001-4000-8000-000000000002",
+        "type": "latest",
+        "sizeX": 12,
+        "sizeY": 10,
+        "row": 12,
+        "col": 0,
+        "config": {
+          "datasources": [
+            {
+              "type": "entity",
+              "name": "All Room Devices",
+              "entityAliasId": "alias-all-rooms",
+              "filterId": null,
+              "dataKeys": [
+                { "name": "version",          "type": "attribute", "label": "Target Version",  "color": "#f44336", "settings": {}, "_hash": 0.201 },
+                { "name": "current_version",  "type": "attribute", "label": "Running Version", "color": "#4caf50", "settings": {}, "_hash": 0.202 }
+              ]
+            }
+          ],
+          "showTitle": true,
+          "backgroundColor": "#fff",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "enableSearch": true,
+            "enableSelectColumnDisplay": true,
+            "enableStickyHeader": true,
+            "displayEntityName": true,
+            "entityNameColumnTitle": "Device",
+            "displayEntityLabel": false,
+            "displayPagination": true,
+            "defaultPageSize": 20,
+            "defaultSortOrder": "entityName",
+            "useRowStyleFunction": true,
+            "rowStyleFunction": "var target = entity['version'] || '1.0'; var running = entity['current_version'] || '1.0'; if (target !== running) return {'background-color':'#fce4ec','color':'#b71c1c','font-weight':'bold'}; return {'color':'#1b5e20'};"
+          },
+          "title": "Fleet OTA - Version Status",
+          "dropShadow": true,
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "showTitleIcon": false,
+          "titleTooltip": "Red rows = update pending (Target Version != Running Version). Green = up to date.",
+          "useDashboardTimewindow": true
+        },
+        "typeFullFqn": "system.cards.entities_table"
+      },
+      "aa000001-0001-4000-8000-000000000003": {
+        "id": "aa000001-0001-4000-8000-000000000003",
+        "type": "alarm",
+        "sizeX": 12,
+        "sizeY": 10,
+        "row": 12,
+        "col": 12,
+        "config": {
+          "datasources": [],
+          "alarmSource": {
+            "type": "entity",
+            "name": "All Room Devices",
+            "entityAliasId": "alias-all-rooms",
+            "dataKeys": [
+              { "name": "createdTime", "type": "alarm", "label": "Created",  "color": "#000", "settings": {}, "_hash": 0.301 },
+              { "name": "type",        "type": "alarm", "label": "Type",     "color": "#000", "settings": {}, "_hash": 0.302 },
+              { "name": "severity",    "type": "alarm", "label": "Severity", "color": "#000", "settings": {}, "_hash": 0.303 },
+              { "name": "status",      "type": "alarm", "label": "Status",   "color": "#000", "settings": {}, "_hash": 0.304 },
+              { "name": "originator",  "type": "alarm", "label": "Device",   "color": "#000", "settings": {}, "_hash": 0.305 }
+            ]
+          },
+          "alarmFilterConfig": {
+            "statusList": ["ACTIVE", "ACKNOWLEDGED"],
+            "typeList": [],
+            "severityList": [],
+            "searchPropagatedAlarms": true
+          },
+          "alarmsPollingInterval": 5,
+          "displayDetails": true,
+          "showTitle": true,
+          "backgroundColor": "#fff",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "alarmsTitle": null,
+            "displayActivity": null,
+            "displayDetails": null,
+            "allowAssign": null,
+            "allowAcknowledgment": true,
+            "allowClear": true,
+            "enableSearch": true,
+            "enableFilter": true,
+            "enableSelectColumnDisplay": true
+          },
+          "title": "Security & OTA Alarms",
+          "dropShadow": true,
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "useDashboardTimewindow": true,
+          "configMode": "basic",
+          "displayTimewindow": true,
+          "actions": {}
+        },
+        "typeFullFqn": "system.alarm_widgets.alarms_table"
+      },
+      "aa000001-0001-4000-8000-000000000004": {
+        "id": "aa000001-0001-4000-8000-000000000004",
+        "type": "timeseries",
+        "sizeX": 24,
+        "sizeY": 8,
+        "row": 22,
+        "col": 0,
+        "config": {
+          "datasources": [
+            {
+              "type": "entity",
+              "name": "Floor 01 Rooms",
+              "entityAliasId": "alias-floor01",
+              "filterId": null,
+              "dataKeys": [
+                { "name": "temperature", "type": "timeseries", "label": "Temperature", "color": "#f44336", "aggregationType": "NONE", "settings": {}, "_hash": 0.401 }
+              ]
+            }
+          ],
+          "showTitle": true,
+          "backgroundColor": "#fff",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "stack": false,
+            "enableSelection": true,
+            "fontSize": 10,
+            "fontColor": "#545454",
+            "showTooltip": true,
+            "tooltipIndividual": true,
+            "grid": {
+              "verticalLines": true,
+              "horizontalLines": true,
+              "outlineWidth": 1,
+              "color": "#545454",
+              "backgroundColor": null,
+              "tickColor": "#DDDDDD"
+            },
+            "yaxis": {
+              "min": 15,
+              "max": 35,
+              "title": "Temperature (C)",
+              "showLabels": true,
+              "tickDecimals": 1
+            },
+            "xaxis": {
+              "title": null,
+              "showLabels": true,
+              "color": "#673AB7"
+            },
+            "shadowSize": 4,
+            "smoothLines": true,
+            "showLegend": true,
+            "legendConfig": {
+              "direction": "column",
+              "position": "bottom",
+              "sortDataKeys": false,
+              "showMin": true,
+              "showMax": true,
+              "showAvg": true,
+              "showTotal": false,
+              "showLatest": true
+            }
+          },
+          "title": "Floor 01 - Room Temperatures (Timeseries)",
+          "dropShadow": true,
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "useDashboardTimewindow": true,
+          "titleTooltip": "Real-time temperature curves for all 20 rooms on Floor 01. Use as a complement to the Image Map heatmap."
+        },
+        "typeFullFqn": "system.charts.basic_timeseries"
+      }
+    },
+    "states": {
+      "default": {
+        "name": "Fleet Overview",
+        "root": true,
+        "layouts": {
+          "main": {
+            "widgets": {
+              "aa000001-0001-4000-8000-000000000001": { "sizeX": 24, "sizeY": 12, "row": 0,  "col": 0  },
+              "aa000001-0001-4000-8000-000000000002": { "sizeX": 12, "sizeY": 10, "row": 12, "col": 0  },
+              "aa000001-0001-4000-8000-000000000003": { "sizeX": 12, "sizeY": 10, "row": 12, "col": 12 },
+              "aa000001-0001-4000-8000-000000000004": { "sizeX": 24, "sizeY": 8,  "row": 22, "col": 0  }
+            },
+            "gridSettings": {
+              "backgroundColor": "#eeeeee",
+              "color": "rgba(0, 0, 0, 0.87)",
+              "columns": 24,
+              "margin": 10,
+              "backgroundSizeMode": "100%",
+              "autoFillHeight": false,
+              "mobileAutoFillHeight": false,
+              "mobileRowHeight": 70,
+              "outerMargin": true
+            }
+          }
+        }
+      }
+    },
+    "entityAliases": {
+      "alias-all-rooms": {
+        "id": "alias-all-rooms",
+        "alias": "All Room Devices",
+        "filter": {
+          "type": "entityName",
+          "resolveMultiple": true,
+          "singleEntity": null,
+          "entityType": "DEVICE",
+          "entityNameFilter": "b01-f"
+        }
+      },
+      "alias-floor01": {
+        "id": "alias-floor01",
+        "alias": "Floor 01 Rooms",
+        "filter": {
+          "type": "entityName",
+          "resolveMultiple": true,
+          "singleEntity": null,
+          "entityType": "DEVICE",
+          "entityNameFilter": "b01-f01-r"
+        }
+      }
+    },
+    "filters": {},
+    "timewindow": {
+      "hideInterval": false,
+      "hideLastInterval": false,
+      "hideQuickInterval": false,
+      "hideAggregation": false,
+      "hideAggInterval": false,
+      "hideTimezone": false,
+      "selectedTab": 0,
+      "realtime": {
+        "realtimeType": 0,
+        "timewindowMs": 300000,
+        "quickInterval": "CURRENT_DAY",
+        "interval": 1000
+      },
+      "aggregation": {
+        "type": "NONE",
+        "limit": 25000
+      },
+      "timezone": null
+    },
+    "settings": {
+      "stateControllerId": "default",
+      "showTitle": true,
+      "showDashboardsSelect": true,
+      "showEntitiesSelect": true,
+      "showDashboardTimewindow": true,
+      "showDashboardExport": true,
+      "toolbarAlwaysOpen": true
+    }
+  }
+}

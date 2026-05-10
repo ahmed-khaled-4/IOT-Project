@@ -14,10 +14,12 @@ from .environment import Environment, VirtualClock
 from .faults import FaultInjector
 from .fleet import FleetManager
 from .metrics import MetricsCollector
+from .ota import OTAManager
 from .physics import PhysicsEngine, ThermalParams
 from .persistence import Persistence
 from .room import Room
 from .security import build_mqtt_tls_ctx, load_coap_psk, load_mqtt_credentials
+from .shadow import ShadowManager
 from .topics import TopicScheme
 from .transport import DupFilter, RoomTransport, TransportKind
 from .transport.coap_transport import CoAPTransport
@@ -163,6 +165,7 @@ async def room_task(
     log_fn: Callable[[str], None],
     persistence: Persistence,
     stop_event: asyncio.Event,
+    shadow_manager: Optional[ShadowManager] = None,
 ) -> None:
     rng = random.Random(fault_seed ^ 0xA5A5A5A5)
     jitter = rng.uniform(0.0, max_jitter_sec) if max_jitter_sec > 0 else 0.0
@@ -224,6 +227,14 @@ async def room_task(
             if not fault_result.dropout_active and timestamp >= next_heartbeat_virtual:
                 transport.publish_heartbeat(room)
                 fleet.update_heartbeat(room_id)
+
+                # Phase 3: publish client attributes (reported state + version) for TB shadow sync
+                if hasattr(transport, "publish_client_attributes"):
+                    transport.publish_client_attributes(room)
+
+                # Phase 3: reconcile shadow state — push desired to command queue if out of sync
+                if shadow_manager is not None:
+                    shadow_manager.apply_desired(room)
 
                 while timestamp >= next_heartbeat_virtual:
                     next_heartbeat_virtual += float(heartbeat_interval_sec_sim)
@@ -384,6 +395,14 @@ async def run_engine(args: argparse.Namespace) -> None:
     if coap_psks:
         log_fn(f"security.coap_psks_loaded count={len(coap_psks)}")
 
+    # Phase 3: Shadow state manager (desired vs reported reconciliation)
+    shadow_manager = ShadowManager(
+        command_queues=fleet.command_queues,
+        log_fn=log_fn,
+        desired_hvac_key=str(cfg.get("shadow", {}).get("desired_hvac_key", "desired_hvac_mode")),
+        desired_dimmer_key=str(cfg.get("shadow", {}).get("desired_dimmer_key", "desired_lighting_dimmer")),
+    )
+
     mqtt_transport = MQTTTransport(
         rooms=mqtt_rooms,
         building_id=1,
@@ -396,8 +415,23 @@ async def run_engine(args: argparse.Namespace) -> None:
         credentials=mqtt_credentials or None,
         dup_filter=dup_filter,
         log_fn=log_fn,
+        shadow_manager=shadow_manager,
     )
     mqtt_transport.register_command_handler(on_room_command)
+
+    # Phase 3: OTA manager — wired after mqtt_transport so it can publish alerts via the fleet client
+    def _publish_ota_alert(payload: Dict[str, Any]) -> None:
+        mqtt_transport.publish_ota_alert(payload)
+
+    ota_manager = OTAManager(
+        physics=physics,
+        rooms_by_id=fleet.rooms_by_id,
+        log_fn=log_fn,
+        publish_alert_fn=_publish_ota_alert,
+        prefix=str(cfg["topics"]["prefix"]),
+    )
+    # Inject ota_manager into the already-constructed transport (before start())
+    mqtt_transport._ota = ota_manager
 
     coap_transport = CoAPTransport(
         rooms=coap_rooms,
@@ -480,6 +514,7 @@ async def run_engine(args: argparse.Namespace) -> None:
                     log_fn=log_fn,
                     persistence=persistence,
                     stop_event=stop_event,
+                    shadow_manager=shadow_manager,
                 )
             )
         )

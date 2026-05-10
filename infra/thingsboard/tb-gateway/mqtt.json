@@ -31,7 +31,13 @@
         },
         "sendDataOnlyOnChange": false,
         "timeout": 60000,
-        "attributes": [],
+        "attributes": [
+          {
+            "type": "string",
+            "key": "current_version",
+            "value": "${current_version}"
+          }
+        ],
         "timeseries": [
           {
             "type": "double",
@@ -116,13 +122,115 @@
           }
         ]
       }
+    },
+    {
+      "topicFilter": "campus/b01/+/+/attributes",
+      "subscriptionQos": 1,
+      "converter": {
+        "type": "json",
+        "deviceInfo": {
+          "deviceNameExpressionSource": "message",
+          "deviceNameExpression": "${sensor_id}",
+          "deviceProfileExpressionSource": "message",
+          "deviceProfileExpression": "${tb_profile}"
+        },
+        "sendDataOnlyOnChange": false,
+        "timeout": 60000,
+        "attributes": [
+          {
+            "type": "string",
+            "key": "reported_hvac_mode",
+            "value": "${reported_hvac_mode}"
+          },
+          {
+            "type": "long",
+            "key": "reported_lighting_dimmer",
+            "value": "${reported_lighting_dimmer}"
+          },
+          {
+            "type": "string",
+            "key": "current_version",
+            "value": "${current_version}"
+          }
+        ],
+        "timeseries": []
+      }
+    },
+    {
+      "topicFilter": "campus/b01/ota/alerts",
+      "subscriptionQos": 1,
+      "converter": {
+        "type": "json",
+        "deviceInfo": {
+          "deviceNameExpressionSource": "constant",
+          "deviceNameExpression": "Campus-HiveMQ-Gateway",
+          "deviceProfileExpressionSource": "constant",
+          "deviceProfileExpression": "Campus-Gateway-MQTT"
+        },
+        "sendDataOnlyOnChange": false,
+        "timeout": 60000,
+        "attributes": [],
+        "timeseries": [
+          {
+            "type": "bool",
+            "key": "ota_tamper",
+            "value": "${ota_tamper}"
+          },
+          {
+            "type": "string",
+            "key": "ota_topic",
+            "value": "${ota_topic}"
+          },
+          {
+            "type": "string",
+            "key": "alert_type",
+            "value": "${alert_type}"
+          },
+          {
+            "type": "string",
+            "key": "severity",
+            "value": "${severity}"
+          }
+        ]
+      }
     }
   ],
   "requestsMapping": {
     "connectRequests": [],
     "disconnectRequests": [],
-    "attributeRequests": [],
-    "attributeUpdates": [],
+    "attributeRequests": [
+      {
+        "topicFilter": "campus/b01/+/+/attr-req",
+        "deviceInfo": {
+          "deviceNameExpressionSource": "message",
+          "deviceNameExpression": "${sensor_id}"
+        },
+        "attributeNameExpressionSource": "constant",
+        "attributeNameExpression": "desired_hvac_mode,desired_lighting_dimmer,version",
+        "topicExpression": "campus/b01/${fNN}/${rXXX}/attr-update",
+        "valueExpression": "${attributeValue}"
+      }
+    ],
+    "attributeUpdates": [
+      {
+        "deviceNameFilter": ".*",
+        "attributeFilter": "desired_hvac_mode",
+        "topicExpression": "campus/b01/${deviceName}/attr-update",
+        "valueExpression": "{\"desired_hvac_mode\": \"${attributeValue}\"}"
+      },
+      {
+        "deviceNameFilter": ".*",
+        "attributeFilter": "desired_lighting_dimmer",
+        "topicExpression": "campus/b01/${deviceName}/attr-update",
+        "valueExpression": "{\"desired_lighting_dimmer\": ${attributeValue}}"
+      },
+      {
+        "deviceNameFilter": ".*",
+        "attributeFilter": "version",
+        "topicExpression": "campus/b01/${deviceName}/attr-update",
+        "valueExpression": "{\"version\": \"${attributeValue}\"}"
+      }
+    ],
     "serverSideRpc": []
   },
   "id": "7448f658-e7f1-4427-a94a-6ca6338c40cf"
